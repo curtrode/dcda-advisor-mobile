@@ -147,13 +147,13 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   const neededCount = neededCategories.length
 
   const handlePreview = () => {
-    const { blobUrl, filename } = generatePdfBlob({ studentData })
+    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
     setPreviewUrl(blobUrl)
     setPreviewFilename(filename)
   }
 
   const handlePrint = () => {
-    const { blobUrl } = generatePdfBlob({ studentData })
+    const { blobUrl } = generatePdfBlob({ studentData, generalElectives })
     printPdf(blobUrl)
     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
   }

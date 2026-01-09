@@ -167,10 +167,11 @@ function unescapeCSV(value: string): string {
 
 interface ExportOptions {
   studentData: StudentData
+  generalElectives?: string[]
 }
 
 // Generate PDF and return blob URL for preview
-export function generatePdfBlob({ studentData }: ExportOptions): { blobUrl: string; filename: string } {
+export function generatePdfBlob({ studentData, generalElectives }: ExportOptions): { blobUrl: string; filename: string } {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
@@ -382,6 +383,10 @@ export function generatePdfBlob({ studentData }: ExportOptions): { blobUrl: stri
         .map((c) => c.code)
       const completedInCat = studentData.completedCourses.filter((c: string) => {
         if (!categoryCourseCodes.includes(c)) return false
+
+        // Exclude courses explicitly selected as general electives
+        if (generalElectives && generalElectives.includes(c)) return false
+
         if (isFlexibleCourse(c)) {
           const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
           return assignedCategory === cat.id
@@ -409,17 +414,25 @@ export function generatePdfBlob({ studentData }: ExportOptions): { blobUrl: stri
   }
 
   // General Electives
-  const electiveCats = degreeWithElectives.electives?.categories.flatMap((cat: { category: string }) =>
-    courses.filter((c) => c.category === cat.category && !requiredCategoryCourses.includes(c.code)).map((c) => c.code)
-  ) ?? []
-  const generalCompleted = studentData.completedCourses.filter((c: string) => {
-    if (requiredCategoryCourses.includes(c)) return false
-    if (isFlexibleCourse(c)) {
-      const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
-      return assignedCategory === 'generalElectives'
-    }
-    return !electiveCats.includes(c)
-  })
+  let generalCompleted: string[]
+
+  if (generalElectives) {
+    // Use explicitly provided general electives
+    generalCompleted = generalElectives
+  } else {
+    // Fallback: infer general electives
+    const electiveCats = degreeWithElectives.electives?.categories.flatMap((cat: { category: string }) =>
+      courses.filter((c) => c.category === cat.category && !requiredCategoryCourses.includes(c.code)).map((c) => c.code)
+    ) ?? []
+    generalCompleted = studentData.completedCourses.filter((c: string) => {
+      if (requiredCategoryCourses.includes(c)) return false
+      if (isFlexibleCourse(c)) {
+        const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
+        return assignedCategory === 'generalElectives'
+      }
+      return !electiveCats.includes(c)
+    })
+  }
   const generalScheduled = scheduledByCategory['generalElectives'] || []
   const generalCredits = specialCreditsByCategory['generalElectives'] || []
   const generalRequired = degree.generalElectives.count

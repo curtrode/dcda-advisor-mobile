@@ -96,6 +96,9 @@ export function useRequirements(
         const completedInCategory = completedCourses.filter((c) => {
           if (!categoryCourseCodes.includes(c)) return false
 
+          // Exclude courses explicitly selected as general electives
+          if (explicitGeneralElectives && explicitGeneralElectives.includes(c)) return false
+
           // For flexible courses, check if assigned to this specific category
           if (isFlexibleCourse(c)) {
             const assignedCategory = courseCategories[c as keyof typeof courseCategories] as FlexibleCourseCategory | undefined
