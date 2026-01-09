@@ -3,9 +3,18 @@ import { Input } from '@/components/ui/input'
 interface NameStepProps {
   value: string
   onChange: (name: string) => void
+  onNext?: () => void
 }
 
-export function NameStep({ value, onChange }: NameStepProps) {
+export function NameStep({ value, onChange, onNext }: NameStepProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Trigger next on Enter or Tab (if name is not empty)
+    if ((e.key === 'Enter' || e.key === 'Tab') && value.trim() && onNext) {
+      e.preventDefault()
+      onNext()
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -20,6 +29,7 @@ export function NameStep({ value, onChange }: NameStepProps) {
         placeholder="Enter your name"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         autoFocus
       />
     </div>

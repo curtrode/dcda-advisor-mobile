@@ -287,6 +287,7 @@ function App() {
           <NameStep
             value={studentData.name}
             onChange={(name) => updateStudentData({ name })}
+            onNext={wizard.goNext}
           />
         )
 
