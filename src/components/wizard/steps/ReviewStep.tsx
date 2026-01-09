@@ -86,7 +86,7 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   // Organize courses by status
   const completedByCategory: Record<string, string[]> = {}
   const scheduledByCategory: Record<string, string[]> = {}
-  const neededCategories: { category: string; name: string }[] = []
+  const neededCategories: { category: string; name: string; remaining: number }[] = []
   const assignedScheduledCourses = new Set<string>() // Track courses already assigned to avoid double-counting
 
   if (degreeProgress) {
@@ -130,12 +130,14 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
         // Check if still needed after scheduled courses
         const totalFilled = cat.completed + scheduledInCat.length
         if (totalFilled < cat.required) {
-          neededCategories.push({ category: cat.id, name: cat.name })
+          const remaining = cat.required - totalFilled
+          neededCategories.push({ category: cat.id, name: cat.name, remaining })
         }
       } else {
         // Category is already satisfied, check if still needed
         if (cat.completed < cat.required) {
-          neededCategories.push({ category: cat.id, name: cat.name })
+          const remaining = cat.required - cat.completed
+          neededCategories.push({ category: cat.id, name: cat.name, remaining })
         }
       }
     }

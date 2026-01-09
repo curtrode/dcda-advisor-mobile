@@ -413,7 +413,7 @@ function App() {
       onNext={wizard.isLastStep ? handleStartOver : handleNext}
       nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
       nextDisabled={!canProceed}
-      showBackButton={!wizard.isLastStep}
+      showBackButton={true}
     >
       {renderStep()}
     </WizardShell>
