@@ -288,6 +288,12 @@ function App() {
             value={studentData.name}
             onChange={(name) => updateStudentData({ name })}
             onNext={wizard.goNext}
+            onImport={(data) => {
+              updateStudentData(data)
+              if (data.name) {
+                updateStudentData({ name: data.name })
+              }
+            }}
           />
         )
 
