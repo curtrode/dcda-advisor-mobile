@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import type { StudentData, Course, SpecialCredit, RequirementCategoryId, FlexibleCourseCategory } from '@/types'
 import { FLEXIBLE_COURSES } from '@/types'
-import { getCapstoneTargetSemester } from './courses'
+import { getCapstoneTargetSemester, buildSemesterPlan } from './courses'
 import coursesData from '../../data/courses.json'
 import requirementsData from '../../data/requirements.json'
 
@@ -455,6 +455,158 @@ export function generatePdfBlob({ studentData, generalElectives }: ExportOptions
   doc.line(startX + colWidths.requirement, 44, startX + colWidths.requirement, y - 2)
   doc.line(startX + colWidths.requirement + colWidths.completed, 44, startX + colWidths.requirement + colWidths.completed, y - 2)
   doc.line(startX + tableWidth, 44, startX + tableWidth, y - 2)
+
+  // Build semester plan
+  y += 10
+  checkPageBreak(50)
+
+  // Calculate needed categories for semester plan
+  const scheduledCourseCategories: Record<string, string> = {}
+  const neededCategoriesForPlan: { category: string; name: string; remaining: number }[] = []
+  
+  // Process required categories
+  for (const cat of degree.required.categories) {
+    const completedInCat = studentData.completedCourses.filter((c: string) => cat.courses?.includes(c))
+    const scheduledInCat = scheduledByCategory[cat.id] || []
+    const credits = specialCreditsByCategory[cat.id] || []
+    const specialCreditCount = credits.length
+    const requiredCount = cat.selectOne ? 1 : ((cat as { count?: number }).count ?? 1)
+    const totalCompleted = completedInCat.length + specialCreditCount
+    const totalWithScheduled = totalCompleted + scheduledInCat.length
+    
+    // Track scheduled course categories
+    scheduledInCat.forEach((code: string) => {
+      scheduledCourseCategories[code] = cat.name
+    })
+    
+    if (totalWithScheduled < requiredCount) {
+      neededCategoriesForPlan.push({
+        category: cat.id,
+        name: cat.name,
+        remaining: requiredCount - totalWithScheduled
+      })
+    }
+  }
+  
+  // Process elective categories (major only)
+  if (degreeWithElectives.electives) {
+    for (const cat of degreeWithElectives.electives.categories) {
+      const categoryCourseCodes = courses
+        .filter((c) => c.category === cat.category && !requiredCategoryCourses.includes(c.code))
+        .map((c) => c.code)
+      const completedInCat = studentData.completedCourses.filter((c: string) => {
+        if (!categoryCourseCodes.includes(c)) return false
+        if (generalElectives && generalElectives.includes(c)) return false
+        if (isFlexibleCourse(c)) {
+          const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
+          return assignedCategory === cat.id
+        }
+        return true
+      })
+      const scheduledInCat = scheduledByCategory[cat.id] || []
+      const credits = specialCreditsByCategory[cat.id] || []
+      const specialCreditCount = credits.length
+      const requiredCount = cat.count ?? 1
+      const totalCompleted = Math.min(completedInCat.length + specialCreditCount, requiredCount)
+      const totalWithScheduled = totalCompleted + Math.min(scheduledInCat.length, requiredCount - totalCompleted)
+      
+      scheduledInCat.forEach((code: string) => {
+        scheduledCourseCategories[code] = cat.name
+      })
+      
+      if (totalWithScheduled < requiredCount) {
+        neededCategoriesForPlan.push({
+          category: cat.id,
+          name: cat.name,
+          remaining: requiredCount - totalWithScheduled
+        })
+      }
+    }
+  }
+  
+  // General electives needed
+  if (totalGeneral + generalScheduled.length < generalRequired) {
+    neededCategoriesForPlan.push({
+      category: 'generalElectives',
+      name: degree.generalElectives.name,
+      remaining: generalRequired - totalGeneral - generalScheduled.length
+    })
+  }
+  generalScheduled.forEach((code: string) => {
+    scheduledCourseCategories[code] = degree.generalElectives.name
+  })
+  
+  // Build and draw semester plan
+  const semesterPlan = buildSemesterPlan(
+    studentData.scheduledCourses,
+    scheduledCourseCategories,
+    neededCategoriesForPlan,
+    studentData.expectedGraduation
+  )
+  
+  if (semesterPlan.length > 0) {
+    // Section header
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Suggested Semester Plan', margin, y)
+    y += 6
+    
+    // Calculate column widths based on number of semesters
+    const semesterColWidth = Math.min(40, (tableWidth - 5) / semesterPlan.length)
+    
+    // Draw header row
+    doc.setFillColor(240, 240, 240)
+    doc.rect(startX, y - 4, semesterPlan.length * semesterColWidth, 8, 'F')
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'bold')
+    
+    semesterPlan.forEach((sem, idx) => {
+      doc.text(sem.semester, startX + idx * semesterColWidth + 2, y)
+    })
+    y += 6
+    
+    // Find max courses in any semester
+    const maxRows = Math.max(...semesterPlan.map(s => s.courses.length), 1)
+    
+    // Draw course rows
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6)
+    
+    for (let row = 0; row < maxRows; row++) {
+      checkPageBreak(10)
+      
+      semesterPlan.forEach((sem, idx) => {
+        const course = sem.courses[row]
+        if (course) {
+          const xPos = startX + idx * semesterColWidth + 2
+          if (course.code === '—') {
+            doc.setTextColor(120)
+          } else {
+            doc.setTextColor(0, 100, 180) // Blue for scheduled
+          }
+          doc.text(course.code, xPos, y)
+          doc.setTextColor(100)
+          // Truncate category name to fit
+          const catText = course.category.length > 10 ? course.category.substring(0, 9) + '…' : course.category
+          doc.text(catText, xPos, y + 3)
+          doc.setTextColor(0)
+        }
+      })
+      y += 8
+    }
+    
+    // Draw border around plan
+    doc.setDrawColor(200)
+    const planHeight = 6 + maxRows * 8 + 2
+    doc.rect(startX, y - planHeight - 4, semesterPlan.length * semesterColWidth, planHeight, 'S')
+    
+    // Disclaimer
+    y += 2
+    doc.setFontSize(6)
+    doc.setTextColor(120)
+    doc.text('— indicates course to be determined. Plan is a suggestion only.', margin, y)
+    doc.setTextColor(0)
+  }
 
   // Footer
   const footerY = 275

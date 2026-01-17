@@ -65,6 +65,16 @@ export function getUnselectedCourses(selectedCourses: string[]): Course[] {
   return courses.filter((c) => !selectedCourses.includes(c.code))
 }
 
+// Get course codes for a required category (for exclusion logic)
+export function getRequiredCategoryCourses(
+  categoryId: RequirementCategoryId,
+  degreeType: 'major' | 'minor' = 'major'
+): string[] {
+  const degree = requirements[degreeType]
+  const requiredCat = degree.required.categories.find((c) => c.id === categoryId)
+  return requiredCat?.courses ?? []
+}
+
 // Get section info for a course
 export function getSectionsForCourse(courseCode: string): CourseSection[] {
   return offerings.sections.filter((s) => s.code === courseCode)
@@ -141,4 +151,124 @@ export const categoryNames: Record<RequirementCategoryId, string> = {
   dcElective: 'DC Elective',
   daElective: 'DA Elective',
   generalElectives: 'General Electives',
+}
+
+// Generate list of semesters from Spring 2026 to a target graduation semester
+export function getSemestersUntilGraduation(expectedGraduation: string | null): string[] {
+  const semesters: string[] = []
+  
+  if (!expectedGraduation) {
+    // Default to 4 semesters if no graduation date
+    return ['Spring 2026', 'Fall 2026', 'Spring 2027', 'Fall 2027']
+  }
+  
+  const match = expectedGraduation.match(/(Spring|Fall|Summer)\s+(\d{4})/)
+  if (!match) {
+    return ['Spring 2026', 'Fall 2026', 'Spring 2027', 'Fall 2027']
+  }
+  
+  const gradSeason = match[1]
+  const gradYear = parseInt(match[2])
+  
+  // Start from Spring 2026 (next semester)
+  let year = 2026
+  let season: 'Spring' | 'Fall' = 'Spring'
+  
+  while (true) {
+    const semesterName = `${season} ${year}`
+    semesters.push(semesterName)
+    
+    // Check if we've reached graduation
+    if (year === gradYear && season === gradSeason) break
+    if (year > gradYear) break
+    if (semesters.length > 10) break // Safety limit
+    
+    // Advance to next semester (skip summer for now)
+    if (season === 'Spring') {
+      season = 'Fall'
+    } else {
+      season = 'Spring'
+      year++
+    }
+  }
+  
+  return semesters
+}
+
+// Distribution plan type
+export interface SemesterPlan {
+  semester: string
+  courses: { code: string; category: string }[]
+}
+
+// Build a semester distribution plan for remaining courses
+export function buildSemesterPlan(
+  scheduledCourses: string[],
+  scheduledCategories: Record<string, string>, // course code -> category name
+  neededCategories: { category: string; name: string; remaining: number }[],
+  expectedGraduation: string | null
+): SemesterPlan[] {
+  const semesters = getSemestersUntilGraduation(expectedGraduation)
+  const plan: SemesterPlan[] = semesters.map(s => ({ semester: s, courses: [] }))
+  
+  if (plan.length === 0) return plan
+  
+  // First semester gets all scheduled courses
+  for (const code of scheduledCourses) {
+    const category = scheduledCategories[code] || 'Elective'
+    plan[0].courses.push({ code, category })
+  }
+  
+  // Build list of all remaining needed "slots" (courses to plan)
+  const neededSlots: { category: string; name: string }[] = []
+  for (const { category, name, remaining } of neededCategories) {
+    for (let i = 0; i < remaining; i++) {
+      neededSlots.push({ category, name })
+    }
+  }
+  
+  // Find capstone and schedule it in the capstone semester
+  const capstoneTarget = getCapstoneTargetSemester(expectedGraduation)
+  const capstoneIndex = neededSlots.findIndex(s => s.category === 'capstone')
+  
+  if (capstoneIndex !== -1 && capstoneTarget) {
+    const capstoneSemesterIdx = semesters.findIndex(s => s === capstoneTarget)
+    if (capstoneSemesterIdx !== -1) {
+      plan[capstoneSemesterIdx].courses.push({ code: '—', category: neededSlots[capstoneIndex].name })
+      neededSlots.splice(capstoneIndex, 1)
+    }
+  }
+  
+  // Distribute remaining slots evenly across semesters (starting from 2nd if 1st has scheduled)
+  const startIdx = plan[0].courses.length > 0 ? 1 : 0
+  const availableSemesters = semesters.length - startIdx
+  
+  if (availableSemesters > 0 && neededSlots.length > 0) {
+    const perSemester = Math.ceil(neededSlots.length / availableSemesters)
+    let slotIdx = 0
+    
+    for (let semIdx = startIdx; semIdx < semesters.length && slotIdx < neededSlots.length; semIdx++) {
+      // Skip if this semester is the capstone semester (to avoid overloading it)
+      const isCapstone = semesters[semIdx] === capstoneTarget
+      const maxThisSem = isCapstone ? Math.min(perSemester, 2) : perSemester
+      
+      for (let i = 0; i < maxThisSem && slotIdx < neededSlots.length; i++) {
+        plan[semIdx].courses.push({ code: '—', category: neededSlots[slotIdx].name })
+        slotIdx++
+      }
+    }
+    
+    // If there are still remaining slots (due to capstone limit), add them to other semesters
+    while (slotIdx < neededSlots.length) {
+      for (let semIdx = startIdx; semIdx < semesters.length && slotIdx < neededSlots.length; semIdx++) {
+        if (semesters[semIdx] !== capstoneTarget) {
+          plan[semIdx].courses.push({ code: '—', category: neededSlots[slotIdx].name })
+          slotIdx++
+        }
+      }
+    }
+  }
+  
+  // Filter out empty semesters (unless it's the first one with scheduled)
+  return plan.filter((p, idx) => p.courses.length > 0 || (idx === 0 && scheduledCourses.length === 0))
 }

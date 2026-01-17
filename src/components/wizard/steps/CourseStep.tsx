@@ -1,8 +1,34 @@
+import { useState } from 'react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { RequirementCategoryId } from '@/types'
+import type { RequirementCategoryId, Course } from '@/types'
 import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
+
+// Info button component
+function CourseInfoButton({ course, onClick }: { course: Course; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
+      className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+      aria-label={`Info about ${course.code}`}
+    >
+      <Info className="size-4" />
+    </button>
+  )
+}
 
 interface CourseStepProps {
   categoryId: RequirementCategoryId
@@ -35,6 +61,8 @@ export function CourseStep({
   isNotYetSelected,
   degreeType,
 }: CourseStepProps) {
+  const [infoCourse, setInfoCourse] = useState<Course | null>(null)
+  
   // Get courses for this category, excluding already selected courses
   const categoryCourses = getCoursesForCategory(categoryId, degreeType, completedRequiredCourses)
   const availableCourses = categoryCourses.filter(
@@ -50,10 +78,71 @@ export function CourseStep({
       !isMutuallyExcluded(course.code, allSelectedCourses.filter((c) => c !== course.code))
   )
 
+  // Check if this is a DC or DA elective category (single category multi-select with "not yet")
+  const isSingleCategoryMultiSelect = categoryId === 'dcElective' || categoryId === 'daElective'
+
   if (multiSelect) {
-    // Group courses by category for general electives
+    // Group courses by category
     const digitalCultureCourses = filteredCourses.filter((c) => c.category === 'Digital Culture')
     const dataAnalyticsCourses = filteredCourses.filter((c) => c.category === 'Data Analytics')
+    const mmAuthoringCourses = filteredCourses.filter((c) => c.category === 'Multimedia Authoring')
+    const honorsCourses = filteredCourses.filter((c) => c.category === 'Honors Seminars & Capstone')
+
+    // For DC/DA electives, only show the relevant category
+    const coursesToShow = isSingleCategoryMultiSelect
+      ? (categoryId === 'dcElective' ? digitalCultureCourses : dataAnalyticsCourses)
+      : filteredCourses
+
+    // For general electives on majors, only show MM Authoring and Honors (DC/DA already captured)
+    const isGeneralElectivesForMajor = categoryId === 'generalElectives' && degreeType === 'major'
+
+    const renderCourseList = (courses: typeof filteredCourses) => {
+      return courses.map((course) => {
+        const isSelected = selectedCourses.includes(course.code)
+        const selectionIndex = selectedCourses.indexOf(course.code)
+        const isFirstSelection = selectionIndex === 0
+        
+        return (
+          <label
+            key={course.code}
+            className={cn(
+              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              isSelected
+                ? "border-primary bg-accent"
+                : "border-border bg-card hover:border-primary/50"
+            )}
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  onSelectCourse(course.code)
+                } else {
+                  onDeselectCourse(course.code)
+                }
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold flex items-center gap-2">
+                {course.code}
+                {isSingleCategoryMultiSelect && isSelected && (
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full",
+                    isFirstSelection 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    {isFirstSelection ? 'Elective' : 'Gen Elective'}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
+            </div>
+            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
+          </label>
+        )
+      })
+    }
 
     const renderCourseGroup = (courses: typeof filteredCourses, categoryLabel: string) => {
       if (courses.length === 0) return null
@@ -63,35 +152,7 @@ export function CourseStep({
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
             {categoryLabel}
           </h3>
-          {courses.map((course) => {
-            const isSelected = selectedCourses.includes(course.code)
-            return (
-              <label
-                key={course.code}
-                className={cn(
-                  "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
-                  isSelected
-                    ? "border-primary bg-accent"
-                    : "border-border bg-card hover:border-primary/50"
-                )}
-              >
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      onSelectCourse(course.code)
-                    } else {
-                      onDeselectCourse(course.code)
-                    }
-                  }}
-                />
-                <div className="flex-1">
-                  <div className="font-semibold">{course.code}</div>
-                  <div className="text-sm text-muted-foreground">{course.title}</div>
-                </div>
-              </label>
-            )
-          })}
+          {renderCourseList(courses)}
         </div>
       )
     }
@@ -104,15 +165,73 @@ export function CourseStep({
         </div>
 
         <div className="space-y-6">
-          {renderCourseGroup(digitalCultureCourses, 'Digital Culture')}
-          {renderCourseGroup(dataAnalyticsCourses, 'Data Analytics')}
+          {isSingleCategoryMultiSelect ? (
+            // Single category (DC or DA electives)
+            <div className="space-y-3">
+              {renderCourseList(coursesToShow)}
+            </div>
+          ) : isGeneralElectivesForMajor ? (
+            // General electives for majors - only Honors Seminars (DC/DA already on separate screens)
+            <>
+              {renderCourseGroup(honorsCourses, 'Honors Seminars')}
+            </>
+          ) : (
+            // General electives for minors - show all categories
+            <>
+              {renderCourseGroup(digitalCultureCourses, 'Digital Culture')}
+              {renderCourseGroup(dataAnalyticsCourses, 'Data Analytics')}
+              {renderCourseGroup(mmAuthoringCourses, 'Multimedia Authoring')}
+              {renderCourseGroup(honorsCourses, 'Honors Seminars')}
+            </>
+          )}
         </div>
 
-        {filteredCourses.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No additional courses available.
-          </p>
+        {/* Not yet option for DC/DA electives */}
+        {isSingleCategoryMultiSelect && (
+          <button
+            type="button"
+            onClick={onSelectNotYet}
+            className={cn(
+              "w-full flex items-center justify-center p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
+              isNotYetSelected
+                ? "border-primary bg-accent text-primary"
+                : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className="text-sm font-medium">Haven't taken any yet</span>
+          </button>
         )}
+
+        {/* Empty state for general electives */}
+        {categoryId === 'generalElectives' && (
+          (isGeneralElectivesForMajor 
+            ? (honorsCourses.length === 0)
+            : filteredCourses.length === 0
+          ) && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No additional courses available.
+            </p>
+          )
+        )}
+
+        {/* Course Info Dialog */}
+        <Dialog open={!!infoCourse} onOpenChange={(open) => !open && setInfoCourse(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-lg">{infoCourse?.code}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <h3 className="font-semibold">{infoCourse?.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {infoCourse?.description}
+              </p>
+              <div className="flex gap-2 text-xs text-muted-foreground pt-2 border-t">
+                <span className="bg-muted px-2 py-1 rounded">{infoCourse?.category}</span>
+                <span className="bg-muted px-2 py-1 rounded">{infoCourse?.college}</span>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
@@ -151,10 +270,11 @@ export function CourseStep({
             )}
           >
             <RadioGroupItem value={course.code} />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="font-semibold">{course.code}</div>
-              <div className="text-sm text-muted-foreground">{course.title}</div>
+              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
             </div>
+            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
           </label>
         ))}
 
@@ -171,6 +291,25 @@ export function CourseStep({
           <span className="text-sm font-medium">Not yet completed</span>
         </label>
       </RadioGroup>
+
+      {/* Course Info Dialog */}
+      <Dialog open={!!infoCourse} onOpenChange={(open) => !open && setInfoCourse(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg">{infoCourse?.code}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <h3 className="font-semibold">{infoCourse?.title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {infoCourse?.description}
+            </p>
+            <div className="flex gap-2 text-xs text-muted-foreground pt-2 border-t">
+              <span className="bg-muted px-2 py-1 rounded">{infoCourse?.category}</span>
+              <span className="bg-muted px-2 py-1 rounded">{infoCourse?.college}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

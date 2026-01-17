@@ -10,6 +10,8 @@ import {
   ScheduleStep,
   ReviewStep,
 } from '@/components/wizard'
+import { InstallPrompt } from '@/components/InstallPrompt'
+import { getRequiredCategoryCourses } from '@/services/courses'
 import type { RequirementCategoryId } from '@/types'
 
 // Track selections per category for Part 1
@@ -18,8 +20,8 @@ interface CategorySelections {
   statistics: string | null
   coding: string | null
   mmAuthoring: string | null
-  dcElective: string | null
-  daElective: string | null
+  dcElectives: string[]  // Multi-select: first counts as elective, rest overflow to general
+  daElectives: string[]  // Multi-select: first counts as elective, rest overflow to general
   generalElectives: string[]
 }
 
@@ -47,8 +49,8 @@ function App() {
     statistics: null,
     coding: null,
     mmAuthoring: null,
-    dcElective: null,
-    daElective: null,
+    dcElectives: [],
+    daElectives: [],
     generalElectives: [],
   })
 
@@ -100,8 +102,12 @@ function App() {
   // Courses being used to fulfill required categories (for excluding from elective options)
   const completedRequiredCourses = useMemo(() => {
     const courses: string[] = []
-    // Only include courses from required categories (intro, statistics, coding, mmAuthoring, capstone)
-    const requiredCategories: (keyof CategorySelections)[] = ['intro', 'statistics', 'coding', 'mmAuthoring']
+    // Only include courses from required categories
+    // For minors: statistics, coding, mmAuthoring
+    // For majors: intro, statistics, coding, mmAuthoring
+    const requiredCategories: (keyof CategorySelections)[] = studentData.degreeType === 'minor'
+      ? ['statistics', 'coding', 'mmAuthoring']
+      : ['intro', 'statistics', 'coding', 'mmAuthoring']
 
     for (const cat of requiredCategories) {
       const value = categorySelections[cat]
@@ -110,7 +116,7 @@ function App() {
       }
     }
     return courses
-  }, [categorySelections])
+  }, [categorySelections, studentData.degreeType])
 
   // Handle course selection for a single-select category
   const handleSelectCourse = useCallback((categoryId: RequirementCategoryId, courseCode: string) => {
@@ -128,11 +134,49 @@ function App() {
   const handleSelectNotYet = useCallback((categoryId: RequirementCategoryId) => {
     setCategorySelections((prev) => ({
       ...prev,
-      [categoryId]: categoryId === 'generalElectives' ? [] : null,
+      [categoryId]: categoryId === 'generalElectives' || categoryId === 'dcElective' || categoryId === 'daElective' ? [] : null,
     }))
     setNotYetSelections((prev) => ({
       ...prev,
       [categoryId]: true,
+    }))
+  }, [])
+
+  // Handle multi-select for DC electives
+  const handleAddDCElective = useCallback((courseCode: string) => {
+    setCategorySelections((prev) => ({
+      ...prev,
+      dcElectives: [...prev.dcElectives, courseCode],
+    }))
+    setNotYetSelections((prev) => ({
+      ...prev,
+      dcElective: false,
+    }))
+  }, [])
+
+  const handleRemoveDCElective = useCallback((courseCode: string) => {
+    setCategorySelections((prev) => ({
+      ...prev,
+      dcElectives: prev.dcElectives.filter((c) => c !== courseCode),
+    }))
+  }, [])
+
+  // Handle multi-select for DA electives
+  const handleAddDAElective = useCallback((courseCode: string) => {
+    setCategorySelections((prev) => ({
+      ...prev,
+      daElectives: [...prev.daElectives, courseCode],
+    }))
+    setNotYetSelections((prev) => ({
+      ...prev,
+      daElective: false,
+    }))
+  }, [])
+
+  const handleRemoveDAElective = useCallback((courseCode: string) => {
+    setCategorySelections((prev) => ({
+      ...prev,
+      daElectives: prev.daElectives.filter((c) => c !== courseCode),
     }))
   }, [])
 
@@ -183,16 +227,18 @@ function App() {
 
     switch (currentStep.id) {
       case 'name':
-        return studentData.name.trim().length > 0
+        return studentData.name.trim().length > 0 && studentData.degreeType !== null
       case 'graduation':
         return studentData.expectedGraduation !== null
       case 'intro':
       case 'statistics':
       case 'coding':
       case 'mmAuthoring':
-      case 'dcElective':
-      case 'daElective':
         return categorySelections[currentStep.id] !== null || notYetSelections[currentStep.id]
+      case 'dcElective':
+        return categorySelections.dcElectives.length > 0 || notYetSelections.dcElective
+      case 'daElective':
+        return categorySelections.daElectives.length > 0 || notYetSelections.daElective
       case 'generalElectives':
         return true // Can proceed even with no selections
       case 'specialCredits':
@@ -222,12 +268,11 @@ function App() {
 
       // Determine unmet categories for Part 2
       const unmet: RequirementCategoryId[] = []
-      const requiredCategories: RequirementCategoryId[] = ['intro', 'statistics', 'coding', 'mmAuthoring']
-
-      // Add electives for major
-      if (studentData.degreeType === 'major') {
-        requiredCategories.push('dcElective', 'daElective')
-      }
+      // For minors: statistics, coding, mmAuthoring
+      // For majors: intro, statistics, coding, mmAuthoring, dcElective, daElective
+      const requiredCategories: RequirementCategoryId[] = studentData.degreeType === 'minor'
+        ? ['statistics', 'coding', 'mmAuthoring']
+        : ['intro', 'statistics', 'coding', 'mmAuthoring', 'dcElective', 'daElective']
 
       for (const cat of requiredCategories) {
         if (notYetSelections[cat]) {
@@ -250,8 +295,8 @@ function App() {
       statistics: null,
       coding: null,
       mmAuthoring: null,
-      dcElective: null,
-      daElective: null,
+      dcElectives: [],
+      daElectives: [],
       generalElectives: [],
     })
     setNotYetSelections({
@@ -286,7 +331,9 @@ function App() {
         return (
           <NameStep
             value={studentData.name}
+            degreeType={studentData.degreeType}
             onChange={(name) => updateStudentData({ name })}
+            onDegreeTypeChange={(degreeType) => updateStudentData({ degreeType })}
             onNext={wizard.goNext}
           />
         )
@@ -303,8 +350,6 @@ function App() {
       case 'statistics':
       case 'coding':
       case 'mmAuthoring':
-      case 'dcElective':
-      case 'daElective':
         return (
           <CourseStep
             categoryId={currentStep.id as RequirementCategoryId}
@@ -321,22 +366,99 @@ function App() {
           />
         )
 
+      case 'dcElective': {
+        // For DC electives, exclude courses from required categories and DA electives
+        const excludeCourses = [
+          categorySelections.intro,
+          categorySelections.statistics,
+          categorySelections.coding,
+          categorySelections.mmAuthoring,
+          ...categorySelections.daElectives,
+          ...categorySelections.generalElectives,
+        ].filter((c): c is string => c !== null)
+
+        // If MM Authoring is "Not Yet", exclude those courses from DC electives
+        // (student may need them to fulfill MM Authoring requirement)
+        const mmAuthoringCourses = notYetSelections.mmAuthoring
+          ? getRequiredCategoryCourses('mmAuthoring', studentData.degreeType || 'major')
+          : []
+
+        return (
+          <CourseStep
+            categoryId="dcElective"
+            title="Which Digital Culture courses have you completed?"
+            hint="Select all DC courses you've taken. The first fulfills your DC Elective requirement; additional courses count as General Electives."
+            selectedCourse={null}
+            selectedCourses={categorySelections.dcElectives}
+            allSelectedCourses={[...excludeCourses, ...mmAuthoringCourses]}
+            completedRequiredCourses={completedRequiredCourses}
+            multiSelect
+            onSelectCourse={handleAddDCElective}
+            onDeselectCourse={handleRemoveDCElective}
+            onSelectNotYet={() => handleSelectNotYet('dcElective')}
+            isNotYetSelected={notYetSelections.dcElective}
+            degreeType={studentData.degreeType || 'major'}
+          />
+        )
+      }
+
+      case 'daElective': {
+        // For DA electives, exclude courses from required categories and DC electives
+        const excludeCourses = [
+          categorySelections.intro,
+          categorySelections.statistics,
+          categorySelections.coding,
+          categorySelections.mmAuthoring,
+          ...categorySelections.dcElectives,
+          ...categorySelections.generalElectives,
+        ].filter((c): c is string => c !== null)
+
+        // If Coding is "Not Yet", exclude those courses from DA electives
+        // (student may need them to fulfill Coding requirement)
+        const codingCourses = notYetSelections.coding
+          ? getRequiredCategoryCourses('coding', studentData.degreeType || 'major')
+          : []
+
+        return (
+          <CourseStep
+            categoryId="daElective"
+            title="Which Data Analytics courses have you completed?"
+            hint="Select all DA courses you've taken. The first fulfills your DA Elective requirement; additional courses count as General Electives."
+            selectedCourse={null}
+            selectedCourses={categorySelections.daElectives}
+            allSelectedCourses={[...excludeCourses, ...codingCourses]}
+            completedRequiredCourses={completedRequiredCourses}
+            multiSelect
+            onSelectCourse={handleAddDAElective}
+            onDeselectCourse={handleRemoveDAElective}
+            onSelectNotYet={() => handleSelectNotYet('daElective')}
+            isNotYetSelected={notYetSelections.daElective}
+            degreeType={studentData.degreeType || 'major'}
+          />
+        )
+      }
+
       case 'generalElectives': {
-        // For general electives, only exclude courses from OTHER categories, not general electives themselves
+        // For general electives, exclude courses from ALL other categories
         const otherCategoryCourses = [
           categorySelections.intro,
           categorySelections.statistics,
           categorySelections.coding,
           categorySelections.mmAuthoring,
-          categorySelections.dcElective,
-          categorySelections.daElective,
+          ...categorySelections.dcElectives,
+          ...categorySelections.daElectives,
         ].filter((c): c is string => c !== null)
+
+        // Different hint for majors vs minors
+        const genElectiveHint = studentData.degreeType === 'major'
+          ? "Honors Seminars count toward General Electives. Note: Junior + Senior Honors Seminars together satisfy the capstone requirement."
+          : "Select any DCDA courses you've completed. These count toward your General Electives."
 
         return (
           <CourseStep
             categoryId="generalElectives"
             title={currentStep.title}
-            hint="Select any other DCDA courses you've completed. These count toward your General Electives."
+            hint={genElectiveHint}
             selectedCourse={null}
             selectedCourses={categorySelections.generalElectives}
             allSelectedCourses={otherCategoryCourses}
@@ -403,20 +525,23 @@ function App() {
   }
 
   return (
-    <WizardShell
-      totalSteps={wizard.totalSteps}
-      currentStep={wizard.currentStepIndex}
-      partLabel={wizard.partLabel}
-      canGoBack={wizard.canGoBack}
-      canGoNext={wizard.canGoNext}
-      onBack={wizard.goBack}
-      onNext={wizard.isLastStep ? handleStartOver : handleNext}
-      nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
-      nextDisabled={!canProceed}
-      showBackButton={true}
-    >
-      {renderStep()}
-    </WizardShell>
+    <>
+      <WizardShell
+        totalSteps={wizard.totalSteps}
+        currentStep={wizard.currentStepIndex}
+        partLabel={wizard.partLabel}
+        canGoBack={wizard.canGoBack}
+        canGoNext={wizard.canGoNext}
+        onBack={wizard.goBack}
+        onNext={wizard.isLastStep ? handleStartOver : handleNext}
+        nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
+        nextDisabled={!canProceed}
+        showBackButton={true}
+      >
+        {renderStep()}
+      </WizardShell>
+      <InstallPrompt />
+    </>
   )
 }
 

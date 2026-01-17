@@ -24,7 +24,7 @@
           "id": "coding",
           "name": "Coding",
           "hours": 3,
-          "courses": ["WRIT 20833", "GEOG 30323", "COSC 10603"],
+          "courses": ["WRIT 20833", "GEOG 30323", "COSC 10603", "DCDA 20833"],
           "selectOne": true
         },
         {
@@ -89,7 +89,7 @@
           "id": "coding",
           "name": "Coding",
           "hours": 3,
-          "courses": ["WRIT 20833", "GEOG 30323", "COSC 10603"],
+          "courses": ["WRIT 20833", "GEOG 30323", "COSC 10603", "DCDA 20833"],
           "selectOne": true
         },
         {
@@ -139,6 +139,10 @@
     {
       "courses": ["MATH 10043", "INSC 20153"],
       "message": "Students may not receive credit for both MATH 10043 and INSC 20153."
+    },
+    {
+      "courses": ["DCDA 20833", "WRIT 20833"],
+      "message": "Students may not receive credit for both DCDA 20833 and WRIT 20833."
     }
   ]
 }

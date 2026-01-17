@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo } from 'react'
 import type { WizardStep, WizardPart, RequirementCategoryId, StudentData } from '@/types'
 
-// Define all wizard steps
-const PART_1_STEPS: WizardStep[] = [
+// Define all wizard steps - will be filtered based on degree type
+const ALL_PART_1_STEPS: WizardStep[] = [
   { id: 'name', part: 'completed', title: "What's your name?" },
   { id: 'graduation', part: 'completed', title: 'When do you expect to graduate?' },
   { id: 'intro', part: 'completed', title: 'Have you completed the Intro/Req\'d English requirement?', categoryId: 'intro' },
@@ -15,6 +15,9 @@ const PART_1_STEPS: WizardStep[] = [
   { id: 'generalElectives', part: 'completed', title: 'Select any other completed DCDA courses', categoryId: 'generalElectives' },
   { id: 'specialCredits', part: 'completed', title: 'Any special credits?' },
 ]
+
+// Steps that only apply to majors (not minors)
+const MAJOR_ONLY_STEPS: Set<string> = new Set(['intro', 'dcElective', 'daElective'])
 
 const REVIEW_STEP: WizardStep = { id: 'review', part: 'review', title: 'Review Your Plan' }
 
@@ -47,13 +50,23 @@ export interface UseWizardFlowReturn {
   reset: () => void
 }
 
-export function useWizardFlow(_studentData: StudentData): UseWizardFlowReturn {
+export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [unmetCategories, setUnmetCategories] = useState<RequirementCategoryId[]>([])
 
-  // Build dynamic step list based on unmet categories
+  const degreeType = studentData.degreeType
+
+  // Build dynamic step list based on degree type and unmet categories
   const steps = useMemo(() => {
-    const allSteps = [...PART_1_STEPS]
+    // Filter Part 1 steps based on degree type
+    const part1Steps = ALL_PART_1_STEPS.filter(step => {
+      // Always include non-major-only steps
+      if (!MAJOR_ONLY_STEPS.has(step.id)) return true
+      // Only include major-only steps if pursuing a major
+      return degreeType === 'major'
+    })
+
+    const allSteps = [...part1Steps]
 
     // Add Part 2 steps for each unmet category (excluding capstone which is auto-scheduled)
     const schedulableCategories = unmetCategories.filter(c => c !== 'capstone')
@@ -81,7 +94,7 @@ export function useWizardFlow(_studentData: StudentData): UseWizardFlowReturn {
     allSteps.push(REVIEW_STEP)
 
     return allSteps
-  }, [unmetCategories])
+  }, [degreeType, unmetCategories])
 
   const currentStep = steps[currentStepIndex] || steps[0]
   const totalSteps = steps.length

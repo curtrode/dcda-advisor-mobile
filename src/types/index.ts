@@ -4,6 +4,7 @@ export interface Course {
   title: string
   category: 'Digital Culture' | 'Data Analytics' | 'Honors Seminars & Capstone' | 'Multimedia Authoring'
   college: string
+  description?: string
 }
 
 // Section from offerings-sp26.json

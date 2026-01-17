@@ -6,11 +6,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Eye, Printer, Download } from 'lucide-react'
+import { Eye, Printer, Download, CalendarDays } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
 import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
-import { getCapstoneTargetSemester, getCourseByCode } from '@/services/courses'
+import { getCapstoneTargetSemester, getCourseByCode, buildSemesterPlan, type SemesterPlan } from '@/services/courses'
 import { cn } from '@/lib/utils'
 
 interface ReviewStepProps {
@@ -76,6 +76,67 @@ function CourseRow({ code, category, showCheck = false }: CourseRowProps) {
   )
 }
 
+// Semester Plan Table Component
+interface SemesterPlanTableProps {
+  plan: SemesterPlan[]
+}
+
+function SemesterPlanTable({ plan }: SemesterPlanTableProps) {
+  if (plan.length === 0) return null
+  
+  return (
+    <div className="bg-card border rounded-xl overflow-hidden">
+      <div className="bg-muted px-4 py-3 flex items-center gap-2">
+        <CalendarDays className="size-4" />
+        <span className="font-semibold text-sm">Suggested Semester Plan</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              {plan.map(({ semester }) => (
+                <th key={semester} className="px-3 py-2 text-left font-medium text-xs whitespace-nowrap">
+                  {semester}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Find max courses in any semester */}
+            {Array.from({ length: Math.max(...plan.map(p => p.courses.length)) }).map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-b last:border-b-0">
+                {plan.map(({ semester, courses }) => {
+                  const course = courses[rowIdx]
+                  return (
+                    <td key={semester} className="px-3 py-2 align-top">
+                      {course ? (
+                        <div>
+                          <div className={cn(
+                            "font-medium text-xs",
+                            course.code === '—' ? 'text-muted-foreground' : ''
+                          )}>
+                            {course.code}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+                            {course.category}
+                          </div>
+                        </div>
+                      ) : null}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 py-2 text-[10px] text-muted-foreground border-t bg-muted/30">
+        — indicates course to be determined. Plan is a suggestion only.
+      </div>
+    </div>
+  )
+}
+
 export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
@@ -86,6 +147,7 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   // Organize courses by status
   const completedByCategory: Record<string, string[]> = {}
   const scheduledByCategory: Record<string, string[]> = {}
+  const scheduledCourseCategories: Record<string, string> = {} // course code -> category name
   const neededCategories: { category: string; name: string; remaining: number }[] = []
   const assignedScheduledCourses = new Set<string>() // Track courses already assigned to avoid double-counting
 
@@ -123,8 +185,11 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
         )
         if (scheduledInCat.length > 0) {
           scheduledByCategory[cat.name] = scheduledInCat
-          // Mark these courses as assigned
-          scheduledInCat.forEach((code) => assignedScheduledCourses.add(code))
+          // Mark these courses as assigned and track their categories
+          scheduledInCat.forEach((code) => {
+            assignedScheduledCourses.add(code)
+            scheduledCourseCategories[code] = cat.name
+          })
         }
 
         // Check if still needed after scheduled courses
@@ -146,7 +211,15 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   // Count totals
   const completedCount = Object.values(completedByCategory).flat().length
   const scheduledCount = Object.values(scheduledByCategory).flat().length
-  const neededCount = neededCategories.length
+  const neededCoursesCount = neededCategories.reduce((sum, cat) => sum + cat.remaining, 0)
+  
+  // Build semester plan
+  const semesterPlan = buildSemesterPlan(
+    studentData.scheduledCourses,
+    scheduledCourseCategories,
+    neededCategories,
+    studentData.expectedGraduation
+  )
 
   const handlePreview = () => {
     const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
@@ -202,8 +275,8 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
       )}
 
       {/* Still Needed */}
-      {neededCount > 0 && (
-        <SummarySection title="Still Needed" status="needed" count={neededCount}>
+      {neededCoursesCount > 0 && (
+        <SummarySection title="Still Needed" status="needed" count={neededCoursesCount}>
           {neededCategories.map(({ category, name, remaining }) => (
             <div key={category} className="px-4 py-3 flex justify-between items-center text-sm">
               <div>
@@ -222,6 +295,11 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
             </div>
           ))}
         </SummarySection>
+      )}
+
+      {/* Semester Plan Table */}
+      {(scheduledCount > 0 || neededCoursesCount > 0) && (
+        <SemesterPlanTable plan={semesterPlan} />
       )}
 
       {/* Export Buttons */}
