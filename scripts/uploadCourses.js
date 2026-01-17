@@ -3,18 +3,22 @@ import { getFirestore, collection, writeBatch, doc } from 'firebase/firestore';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { config } from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Load environment variables
+config({ path: join(__dirname, '../.env') });
+
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyATGBk9GvnkwRj9JYJDAN3g56YhY5nlEIE",
-  authDomain: "dcda-advisor-mobile.firebaseapp.com",
-  projectId: "dcda-advisor-mobile",
-  storageBucket: "dcda-advisor-mobile.firebasestorage.app",
-  messagingSenderId: "972663329432",
-  appId: "1:972663329432:web:d8ea0332661c4de8b3f6ed"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
 };
 
 // Initialize Firebase
