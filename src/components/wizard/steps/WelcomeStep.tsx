@@ -27,13 +27,13 @@ export function WelcomeStep() {
       <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
         <div className="flex gap-3">
           <Heart className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0 flex-1">
             <h3 className="font-semibold text-amber-900 dark:text-amber-100">Always Check with Your Advisor</h3>
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="text-sm text-amber-800 dark:text-amber-200 break-words">
               While this tool provides helpful guidance, it's important to always verify your degree plan with a DCDA advisor.
               They can provide personalized advice, account for transfer credits, and ensure you're on track to graduate.
             </p>
-            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium break-words">
               Schedule regular check-ins with your DCDA advisor throughout your academic journey.
             </p>
             <Button
@@ -45,10 +45,10 @@ export function WelcomeStep() {
                 href="https://calendly.com/c-rode/appointments"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 text-sm"
               >
-                <Calendar className="h-4 w-4" />
-                Schedule an Advising Appointment
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Schedule an Advising Appointment</span>
               </a>
             </Button>
           </div>
