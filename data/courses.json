@@ -3,396 +3,469 @@
     "code": "ADRN 30503",
     "title": "A Human-Centered AI Future",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "The course will focus on the close study of liberal arts sources from a variety of disciplines and perspectives and engage students in deep and sustained discussion and analysis of the challenges and opportunities of AI. It will also invite and encourage students and participating faculty into hands-on play and experimentation with AI."
   },
   {
     "code": "ANTH 40523",
     "title": "Mass Media and Culture",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisite: ANTH 20623 or consent of instructor. An anthropological examination of the relationship between mass media and culture. Particular emphasis on the impact of mass media on the production and consumption of cultural meaning and identities. Inquiry into representations of gender, sexuality, the body, ethnicity, social race, and nationhood in mass media discourses. Case studies of mass media in local spaces and global contexts."
   },
   {
     "code": "ARST 10123",
     "title": "Design and Color",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "Study and application of basic principles of creative design."
   },
   {
     "code": "ARST 20503",
     "title": "Video Art: Beginning New Media",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "An introduction to the concepts, tools and techniques of new media. Students will explore several forms of time-based media while studying related historical and contemporary artists."
   },
   {
     "code": "ARST 20743",
     "title": "Photography",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "Basic introduction to equipment, materials and processes of photography. Emphasis on creative use of materials and visual imagination."
   },
   {
     "code": "ARST 30510",
     "title": "3D Modeling and 3D Printing",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "Prerequisites: ARST 20503 or permission of instructor. An advanced exploration of the concepts, tools and techniques of new media. This course will explore the creation of digital sculptures, virtual worlds, and experimental studies with fabrication technology."
   },
   {
     "code": "ARST 30610",
     "title": "Interactive Robotics and Kinetic Sculpture",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "Prerequisites: ARST 20503. An advanced exploration of the concepts, tools and techniques of new media. This course will explore the Arduino microcontroller and its ability to control our physical world. Students will learn how to control motors, read environmental sensors, and utilize fabrication technologies such as laser engraving and 3D printing."
   },
   {
     "code": "CRWT 30363",
     "title": "Digital Creative Writing",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL/WRIT/CRWT 10203 or ENGL/WRIT/CRWT 20103 or ENGL/WRIT/CRWT 20133 or Digital Culture and Data Analytics major or minor. Explores the composition of creative work using digital technologies - collage, graphic narratives, multimedia poetry/fiction, and creative short animations. The course emphasizes concepts in creative writing, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating typography, images, and other modes. Students cannot receive credit for CRWT 55363 and CRWT 30363."
   },
   {
     "code": "DCDA 30970",
     "title": "Special Topics in DCDA",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "A directed study in Digital Culture and/or Data Analytics (DCDA). A variety of special or one-time topics in DCDA may be covered in this class. The format may vary by semester. 1-3 semester hours. This course may be repeated for credit."
   },
   {
     "code": "DCDA 40273",
     "title": "DCDA Internship",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: 60 credit hours; major GPA of 3.0 or Cum GPA of 2.8 minimum; approval of the department. Students place themselves with companies, agencies, or non-profit organizations for workplace experience. Duties -- varied to fit the needs and opportunities associated with the participating entity -- generally include students utilizing their proficiencies in digital content creation and/or data analysis. Course may be repeated once for credit."
   },
   {
     "code": "DSGN 10103",
     "title": "Intro to Creative Practice",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "An introduction to and overview of creative practices used in the applied arts, design, and communication professions."
   },
   {
     "code": "DSGN 10153",
     "title": "Introduction to Computer Graphics",
     "category": "Digital Culture",
-    "college": "Fine Arts"
+    "college": "Fine Arts",
+    "description": "An introduction to and overview of the use of computers in graphic design. Emphasis on skills, including understanding and using the current graphic design software. This includes page-layout, vector-based drawing, scanning and image enhancement/manipulation."
   },
   {
     "code": "EDUC 50263",
-    "title": "Digital Communication & Collaboration (new)",
+    "title": "Digital Communication & Collaboration",
     "category": "Digital Culture",
-    "college": "EDUC"
+    "college": "EDUC",
+    "description": "Prerequisites: EDMS/SE/UC 30113, Digital Literacy, Learning, and Citizenship in Education and admission to the Graduate Education Program or instructor permission. Educational applications of digital tools to support 21st century skills such as communication, collaboration, critical thinking, and creativity. Students will develop skills in locating organizing, analyzing, evaluating, designing and communicating digital information. Students will also learn fundamentals of data management and web development. In addition, they will consider ethical and societal issues related to digital communication and collaboration in education."
   },
   {
     "code": "ENGL 20813",
     "title": "Introduction to Digital Humanities",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This class provides an overview of the different types of digital methodologies available to the humanities student and scholar and introduces students to how humanities questions may be addressed using digital methods. Though there are many ways to approach the digital humanities, this class will focus on three specific areas of digital scholarship: archives and editions, text analysis, and digital map making. No previous experience in technology or programming is required."
   },
   {
     "code": "ENGL 30803",
     "title": "Theories of Cinema",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803 and ENGL 20803. A study of theories of cinema as text in the humanities, including areas such as analytic approaches to film, rhetorical approaches to film, and/or film criticism. Course includes an integrated lab for viewing required films."
   },
   {
     "code": "HCOL 41203",
     "title": "Society through Multimedia",
     "category": "Digital Culture",
-    "college": "HONORS"
+    "college": "HONORS",
+    "description": "Prerequisites: Acceptance into the Honors College. This course examines the cycle of influence between media and society through critical examination of film, television, online video, video games and other forms of digital media."
   },
   {
     "code": "HIST 30673",
     "title": "History of Museums and Collecting",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This undergraduate seminar examines the ways in which societies from the ancient world to the present acquire, order, and assign value to material artifacts. From ethnographic remains to natural specimens, and from works of art to antiquities, people have plundered, collected, and displayed objects across time and space. Special attention to circulation will help students analyze the processes by which objects were detached from their natural context and reinserted into thematic sets based on aesthetic, religious, political or scientific priorities that gave rise to the modern museum. Topics include the culture of learning at the Library of Alexandria, relics and devotional practices in medieval Europe, collecting exotica during Renaissance, sensory museums of the Enlightenment, and black market trade of antiquities in the present. Class includes fieldtrips to local museums, libraries, and private collections."
   },
   {
     "code": "HIST 30693",
     "title": "Technologies of History - From Cuneiform to Coding",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course will ask how the ways that humans communicate—via inscription, graffito, letter, or Tweet—have the power to affect society and make history. We will explore the history of communications technologies from the invention of writing to the printing press to social media, and each week, we will pair these topics with analysis of a cutting-edge digital archive or project. Students will then learn how to use the 'digital tools' reflected in these projects, building the skills necessary to produce their own works of digital historical scholarship."
   },
   {
     "code": "HIST 30803",
     "title": "U.S. Urban History",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "An introduction to U.S. urban history, focusing on race, space, community activism, labor, and urban politics from the Civil War to the present."
   },
   {
     "code": "HIST 30813",
     "title": "Oral History Field Research Seminar",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This service-learning field research course introduces students to community-based research and oral history theory and methodology, including interviewing techniques and debates within the discipline. Students will conduct extensive independent research outside the comfortable confines of the university. (US)"
   },
   {
     "code": "INTR 20103",
     "title": "Tech Skills for Emerging Professionals",
     "category": "Digital Culture",
-    "college": "INTR"
+    "college": "INTR",
+    "description": "The Technology Skills for Emerging Professionals course equips students with essential digital skills for personal and professional success. Topics include operating systems, communication technologies, productivity tools, digital media creation, artificial intelligence, and immersive technologies. Students learn skills in professional communication, collaboration, digital security, AI productivity, and educational media. Hands-on activities build proficiency with a variety of tools and platforms. By mastering these technologies, participants are prepared to navigate and leverage digital tools effectively in today's professional and personal environments."
   },
   {
     "code": "RELI 30483",
     "title": "Digital Religion",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course is an advanced exploration of how digital technology is affecting the moral and religious sensibilities of contemporary culture, with a particular focus on how this technology is changing assumptions about God, the soul and morality."
   },
   {
     "code": "SOCI 30583",
     "title": "Technology, Social Media and Society",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course introduces students to the impact of technology and social media in everyday life on dimensions of society such as the individual, groups, social processes, social institutions, and social structures. Particular emphasis is on understanding the impact of social media in areas such as politics, economics, revolutions, work, family, and everyday social interactions."
   },
   {
     "code": "STCO 36403",
     "title": "Digital Storytelling",
     "category": "Digital Culture",
-    "college": "Schieffer"
+    "college": "Schieffer",
+    "description": "Prerequisites: STCO 11103 or 21103 and STCO 32403. Introduction to video editing software, image editing and basics of digital storytelling. Creation and critique of videos for advertisements, stories, and advocacy. Students must earn a C or higher in each strategic communication course required for credit toward completion of STCO major degree requirements."
   },
   {
     "code": "STCO 43803",
     "title": "New Media",
     "category": "Digital Culture",
-    "college": "Schieffer"
+    "college": "Schieffer",
+    "description": "Prerequisites: STCO 11103 or 21103, 16103 or 26103, and 35503. Introduces the fields of advertising and public relations in new media. Topics covered include digital persuasion techniques, interactive media theory, new media planning and measurement, analytics, social media and interactive design considerations. Students must earn a C or higher in each strategic communication course required for credit toward completion of STCO major degree requirements."
   },
   {
     "code": "WRIT 20303",
     "title": "Writing Games",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Students explore the rhetorical dimensions of writing within and about games, considering both how games are a form of writing and writing hybridizes genre conventions. While both games and writing have long been important elements of culture, students in this class will come to a better understanding of how the two are mutually informative. Students will consider how games inform writing, how writing informs games, and how both games and writing compose the world at large."
   },
   {
     "code": "WRIT 20323",
-    "title": "Introduction to Multimedia Authoring(**)",
+    "title": "Introduction to Multimedia Authoring",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "An introduction to authoring with multiple digital modes: image, sound, and video. By incorporating rhetorical concepts such as audience, context, and persuasive appeals, students gain a basic experience of multimodal composition while investigating and/or advocating as citizens. This course does not require any previous experience with these modes or digital technologies."
   },
   {
     "code": "WRIT 20333",
     "title": "Language, Technology, and Society",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "An introduction to the ways in which social organizations, technology, and language influence one another."
   },
   {
     "code": "WRIT 30223",
     "title": "Advanced Technical Writing",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803 and either ENGL 20803, or WRIT 20113. A course in practical communication with a concentration on topics in technical writing and information design, including oral presentations and use of visual materials and digital tools. Assignments are tailored to fit students' major fields and professional interests. Student cannot receive credit for WRIT 55223 and WRIT 30223."
   },
   {
     "code": "WRIT 30283",
     "title": "Cyberliteracy",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803, ENGL 20803, and at least one 10000- or 20000-level ENGL/WRIT course. This course will investigate issues related to cyberliteracy: what it means to read, write, communicate, and make knowledge in a digital world. In particular, the course will consider how computer technologies challenge traditional notions of literacy, identity, and community."
   },
   {
     "code": "WRIT 30390",
     "title": "Publication Production",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803 or 10833, and 20803 or 20833. A 1.5 hour credit course intended for students with an interest in publication and basic web design. Students in the course will work in every stage of the production of a least one of the English department's print or digital publications. Specifically, students will gain knowledge of and experience in (1) the history and purpose of the publication's genre, (2) the selection, editing, and proofing of the publication's drafts, (3) the publication's layout and the design, and (4) the distribution and promotion of the completed product. Students will also receive practical training with relevant publishing and design software. This course may be repeated for credit."
   },
   {
     "code": "WRIT 30603",
     "title": "Rhetoric of Social Media",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803, 20803, and at least one 10000- or 20000-level ENGL/WRIT course. This course explores the characteristics, affordances, and effects of social media as rhetoric, with special attention to the ways in which the uniquely digital qualities of social media such as speed, interactivity, anonymity, remix, and networked circulation complicate the traditional rhetorical situation of rhetor, audience, text, and context. Student cannot receive credit for WRIT 55153 and WRIT 30603."
   },
   {
     "code": "WRIT 30893",
     "title": "Digital Inclusiveness",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisite: ENGL 20803 Critical examination of how digital authorship technologies impact and are changed by cultural identities, especially with inclusivity with regard to race, class, gender, sexual identity, and ability."
   },
   {
     "code": "WRIT 40163",
     "title": "Multimedia Authoring I: Image and Hypertext",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Investigates the relationship between new media, culture, and design, with particular emphasis on mulimodal, interactive texts. Course emphasizes concepts in rhetoric, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating print, image, and other modes."
   },
   {
     "code": "WRIT 40233",
     "title": "Writing for Publication",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803, ENGL 20803, and at least one 10000- or 20000-level ENGL/WRIT course. A survey of the possibilities of writing for magazine publication and the construction of essays and articles for specific markets."
   },
   {
     "code": "WRIT 40243",
     "title": "Professional Writing",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803 and either ENGL 20803 or WRIT 20113. An advanced course in writing, rhetoric, and design appropriate to diverse professions (e.g., law, medicine, engineering, social work). Students analyze, and write for, particular audiences in terms of their genre conventions, content expectations, and language dynamics."
   },
   {
     "code": "WRIT 40263",
     "title": "Multimedia Authoring II: Animation and Film",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 20803 and one 20000-level CRWT or WRIT course. An intermediate-to-advanced course on the authoring of multimedia texts, with a focus on moving images, including animation, film, and video. Course emphasizes concepts in rhetoric, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating moving images, sound, text, and other modes. Student cannot receive credit for WRIT 55263 and WRIT 40263."
   },
   {
     "code": "WRIT 40283",
     "title": "Editing and Publishing",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 10803, ENGL 20803, and at least one 10000- or 20000-level ENGL/WRIT course. Introduces students to the practice of editing manuscripts intended for publication. Topics include the editorial process (both academic and commercial), the ethics of editing, and the role of the editor in publishing. Students will engage in extensive editing practice of journal and book manuscripts. Student cannot receive credit for WRIT 55283 and WRIT 40283."
   },
   {
     "code": "WRIT 40363",
     "title": "Multimedia Authoring III: Mobile Apps & eBooks",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Explores the complex relationship between new media, culture, and design, with particular emphasis on the production of mobile applications and eBooks publications. Course emphasizes concepts in rhetoric, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating print, image, and other modes. Student cannot receive credit for WRIT 55743 and WRIT 40363."
   },
   {
     "code": "WRIT 40463",
     "title": "Multimedia Authoring IV: Comics Production",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: ENGL 20803. Explores the complex relationship between new media, culture, and design, with particular emphasis on comics and graphic narratives. Course emphasizes concepts in rhetoric, multimedia, and authorship in print and digital environments. Students design and compose a variety of multimedia projects incorporating image and text (drawn and digitally manipulated). Student cannot receive credit for WRIT 55753 and WRIT 40463."
   },
   {
     "code": "WRIT 40563",
     "title": "Multimedia Authoring V: Sound & Sampling",
     "category": "Digital Culture",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Explores the complex relationship between new media, culture, and design, with particular emphasis on the production of sound and podcasting. Course emphasizes concepts in rhetoric, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating sound, print, image, and other modes."
   },
   {
     "code": "COSC 10603",
     "title": "Introduction to Python for Data Analysis",
     "category": "Data Analytics",
-    "college": "COSE"
+    "college": "COSE",
+    "description": "This course will introduce Python data structures and ways to manipulate data. Students will design, implement, and test Python programs. This course will also give the students a working knowledge of how to use Python to perform data analysis."
   },
   {
     "code": "CRJU 20883",
     "title": "Data Analyses in Criminal Justice",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "An introduction to statistical data analysis most commonly used in criminal justice research. Topics include data as well as basic descriptive and inferential statistics with an emphasis on interpretation of results."
   },
   {
     "code": "CRJU 30703",
     "title": "Crime Mapping",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "An exploration of the many ways Geographical Information Systems (GIS) technology is used for crime mapping and pattern analysis. The course provides a general overview of crime mapping techniques, including their theoretical background, application, trends and future directions. The course has an integrated lab component that is designed to introduce the student to the software application ArcGIS."
   },
   {
     "code": "DCDA 30970",
     "title": "Special Topics in DCDA",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "A directed study in Digital Culture and/or Data Analytics (DCDA). A variety of special or one-time topics in DCDA may be covered in this class. The format may vary by semester. 1-3 semester hours. This course may be repeated for credit."
   },
   {
     "code": "DCDA 40273",
     "title": "DCDA Internship",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: 60 credit hours; major GPA of 3.0 or Cum GPA of 2.8 minimum; approval of the department. Students place themselves with companies, agencies, or non-profit organizations for workplace experience. Duties -- varied to fit the needs and opportunities associated with the participating entity -- generally include students utilizing their proficiencies in digital content creation and/or data analysis. Course may be repeated once for credit."
   },
   {
     "code": "DCDA 40343",
-    "title": "AI & LLM Concepts & Apps (new)",
+    "title": "AI & LLM Concepts & Apps",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course provides an in-depth exploration of Artificial Intelligence (AI) with a focus on large language models (LLMs) and their applications in Geography. Students will gain foundational knowledge in AI and deep learning, develop skills in prompt engineering, and apply AI tools to solve real-world problems, particularly in geographic analysis and spatial data interpretation. The course emphasizes hands-on experience, ethical considerations, and culminates in a final project where students integrate AI concepts to design their own applications with a geographic focus."
   },
   {
     "code": "ECON 40313",
     "title": "Econometrics",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: A 'C-' or better in ECON 10223 OR 30223 OR 31223, and 10233 OR 30233, and MATH 10043 or MATH 30853 or INSC 20153. Techniques of simple and multiple regression. Methods for correcting problems of autocorrelation, heteroscedasticity, and multicollinearity."
   },
   {
     "code": "ENSC/GEOL 30363",
     "title": "Intro to Geospatial Tech",
     "category": "Data Analytics",
-    "college": "COSE"
+    "college": "COSE",
+    "description": "Introduction to the fundamentals of Geospatial Technologies, including Geographic Information Systems (GIS), Global Positioning Systems (GPS), cartography, remote sensing, and spatial analysis through a series of hands-on computer-based exercises. Participants will learn how to utilize geospatial technology to address social and environmental issues. This course is designed to be used as a stand-along course to complement other disciplines or as an entry level course into other GIS classes. (Crosslisted as ENSC/GEOL 30363.)"
   },
   {
     "code": "ENGL 30873",
     "title": "Digital Approaches to Textual Problems",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Students will explore the methods and theories that underlie big data in the humanities. Students will examine how we can better ask and answer research questions in rhetoric, culture, and literature through the use of digital tools such as R and/or Python. Students will work independently and collaboratively to perform humanities research using these tools. Through a series of close reading, distant reading, writing, and programming assignments, students will also examine issues of race, class, gender, and sexuality. Students will learn to think critically about the uses and limitations of digital methods and theories. Student cannot receive credit for ENGL 55493 and ENGL 30873."
   },
   {
     "code": "ENGR 10573",
     "title": "Applied Programming - MatLab",
     "category": "Data Analytics",
-    "college": "COSE"
+    "college": "COSE",
+    "description": "Students in the course will examine both structured programming concepts and Matlab's built-in functions, providing a platform for utilizing Matlab's extensive capabilities for contending with engineering problems. Students will study variables, assignments, input/output, selection statements, loops, and problem solving."
   },
   {
     "code": "ENTR 30123",
     "title": "Technology Entrepreneurship",
     "category": "Data Analytics",
-    "college": "Neeley"
+    "college": "Neeley",
+    "description": "Emerging technologies provide new platforms and mediums for innovation, offering entrepreneurs ever greater opportunities to create value in society. This course will provide hands-on experience with the latest tools entrepreneurs are using to develop new products."
   },
   {
     "code": "GEOG 30313",
     "title": "Introduction to GIS",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course is an introduction to Geographic Information Systems (GIS), with a focus on both the conceptual foundations and applications of GIS software. Topics covered include spatial data models; cartographic design; coordinate systems and map projections; address geocoding and GPS data; spatial analysis; Internet GIS applications; and GIS modeling. Laboratory assignments give students experience using GIS in thematic areas such as demographic analysis, market research, and urban environmental change."
   },
   {
     "code": "GEOG 30323",
     "title": "Data Analysis and Visualization",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Data literacy is essential to success in many professional fields. In this course, students will gain experience acquiring, manipulating, and analyzing data; and will learn how to effectively communicate their findings with static and interactive visualizations. Students will learn how to work with data using the Python programming language, one of the most popular tools for performing data analysis."
   },
   {
     "code": "GEOG 30333",
-    "title": "Intro to GIS for Real Estate (new)",
+    "title": "Intro to GIS for Real Estate",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course is an introduction to Geographic Information Systems (GIS), with a focus on the use of GIS for applications that are important for real estate professionals. No prior knowledge of GIS is assumed for this course, although students should have some facility with basic mathematics, statistics, and spreadsheet programs. Students will develop familiarity with leading GIS software programs and build experience managing property-related databases, conducting locational analysis, site-suitability analyses, mapping market trends, risk-assessment, and utilizing GIS to navigate permitting, zoning, and other regulatory processes."
   },
   {
     "code": "GEOG 40303",
-    "title": "Topics in Geospatial Tech (new)",
+    "title": "Topics in Geospatial Tech",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: GEOG 30313 or with instructor permission. This course number will be used for trial runs of upper-division technically-focused Geography courses. All the classes will develop student's technical mapping and analysis skills using Geographic Information Systems software and/or statistical programs such as R or Python. May be repeated for credit provided the technical and/or topical focus changes."
   },
   {
     "code": "GEOG 40313",
     "title": "Advanced GIS",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: GEOG 30313, or instructor consent. In this course, students gain experience with advanced applications of Geographic Information Systems (GIS) software. Topics covered include GIS modeling; web GIS applications and distributed GIS services; open-source GIS; developing geoprocessing scripts using the Python programming language; and the current state of the GIS profession. Students will also complete a semester-long course project in which they apply GIS techniques to a topic of their interest."
   },
   {
     "code": "GEOG 40323",
     "title": "Urban & Business GIS",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: GEOG 30313; another introductory GIS course; or instructor consent. This advanced GIS course gives students experience applying GIS to solve real-world urban and business problems. Topics covered include demographic analysis; remote sensing of urban areas; network analysis; 3D urban modeling; spatial statistics; time and GIS; geodemographic classification; market area analysis; and web GIS services. Students will also complete a semester-long group project that applies GIS to assist an organization or business in the Fort Worth area."
   },
   {
     "code": "GEOG 40333",
-    "title": "Digital Cartography (new)",
+    "title": "Digital Cartography",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: GEOG 30313 or with instructor permission. Cartography refers to the art and science of map-making. Contemporary cartography is primarily accomplished using digital technologies including Geographic Information Systems (GIS). Mapping is crucial to exploring and understanding distributions of geographic phenomena. It is also an important phase of many database-intensive analyses, because a map is often the best way to visualize results and show them to others. Our emphases in this course will be on designing and producing both thematic and reference maps at multiple scales using symbols and visual hierarchies that allow the content of the maps to be effectively communicated and presented in aesthetically-pleasing and/or engaging ways. Topics covered include: significant eras in cartographic design, key historical and contemporary cartographers, map projections, symbolizing quantitative data, use of space, layout, compilation, verbal content, and the use of computer technology in the design and production of maps."
   },
   {
     "code": "GEOL 20113",
-    "title": "Earth System Science (NSC)",
+    "title": "Earth System Science",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Introductory level course, with integrated lecture and laboratory experience, focusing on Earth as a system of interacting spheres. The course will cover interactions between Earth's biosphere (including people), geosphere, hydrosphere, atmosphere and consequences for current and future population, life expectancy, food, climate, water availability and water quality. Emphasis is placed on how basic scientific knowledge and readily available data can be used in understanding Earth Systems."
   },
   {
     "code": "INSC 20153",
     "title": "Statistical Analysis",
     "category": "Data Analytics",
-    "college": "Neeley"
+    "college": "Neeley",
+    "description": "3 hours. Prerequisite: Successful completion of Excel portion of the MOS test. Basic statistical theory used in analysis and interpretation of numeric data. Topics covered include descriptions of frequency distributions, discrete and continuous probabilities, confidence intervals, hypothesis testing, time series analysis including weighted and exponential smoothing, simple and multiple regression, index numbers and quality control. Students may not receive credit for both MATH 10043 and INSC 20153."
   },
   {
     "code": "MATH 10043",
     "title": "Elementary Statistics",
     "category": "Data Analytics",
-    "college": "COSE"
+    "college": "COSE",
+    "description": "Empirical frequency distributions, binomial and normal distributions. Regression and correlation. Statistical inference. Students are expected to have mathematical background equivalent to college algebra or two years of high school algebra. Students may not receive credit for both MATH 10043 and INSC 20153."
   },
   {
     "code": "WRIT 20833",
     "title": "Intro to Coding in the Humanities",
     "category": "Data Analytics",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "This course is designed as an introduction to coding for students in the Humanities and/or the Digital Culture and Data Analytics (DCDA) Minor. Hence, students will be introduced to the basics of a computer programming language (such as Python or R) as it pertains to the intellectual, cultural, and creative work central to the Humanities."
+  },
+  {
+    "code": "DCDA 20833",
+    "title": "Intro to Coding in the Humanities",
+    "category": "Data Analytics",
+    "college": "ADRN",
+    "description": "This course is designed as an introduction to coding for students in the Humanities and/or the Digital Culture and Data Analytics (DCDA) Program. Hence, students will be introduced to the basics of a computer programming language (such as Python or R) as it pertains to the intellectual, cultural, and creative work central to the Humanities. Students may not receive credit for both WRIT 20833 and DCDA 20833."
   },
   {
     "code": "DCDA 30003",
     "title": "Junior Honors Seminar",
     "category": "Honors Seminars & Capstone",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: Department permission and enrollment in the Digital Culture and Data Analytics (DCDA) minor. A directed-study course open to Honors students enrolled in the Digital Culture and Data Analytics (DCDA) minor who wish to do research on a topic in Digital Culture and/or Data Analytics in preparation for writing the honors thesis in DCDA 40003 (Senior Honors Seminar). Students are required to produce an annotated bibliography a clearly articulated thesis, and a detailed outline."
   },
   {
     "code": "DCDA 40003",
     "title": "Senior Honors Seminar",
     "category": "Honors Seminars & Capstone",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: Department permission and DCDA 30003 with a grade of B or better. A directed-study course open to Honors students enrolled in the Digital Culture and Data Analytics (DCDA) minor for writing the honors thesis based on research conducted in DCDA 30003 (Junior Honors Seminar). The completed project must be approved by two faculty members affiliated with the DCDA program."
   },
   {
     "code": "DCDA 40833",
     "title": "Capstone Course (offered each Spring)",
     "category": "Honors Seminars & Capstone",
-    "college": "ADRN"
+    "college": "ADRN",
+    "description": "Prerequisites: Either MATH 10043 or INSC 20153. Also, one of the following: GEOG 30323, WRIT 20833, or COSC 10603. This course is designed as a capstone experience for students in the Digital Culture & Data Analytics (DCDA) program. Hence, the course is designed to give students the opportunity to develop a semester-long project that will allow them to practice, reflect upon, and publicly showcase their work as students in the DCDA program."
   }
 ]
