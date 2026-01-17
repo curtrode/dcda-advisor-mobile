@@ -3,6 +3,7 @@ import { useStudentData } from '@/hooks/useStudentData'
 import { useWizardFlow } from '@/hooks/useWizardFlow'
 import {
   WizardShell,
+  WelcomeStep,
   NameStep,
   GraduationStep,
   CourseStep,
@@ -226,6 +227,8 @@ function App() {
     const { currentStep } = wizard
 
     switch (currentStep.id) {
+      case 'welcome':
+        return true // Can always proceed from welcome screen
       case 'name':
         return studentData.name.trim().length > 0 && studentData.degreeType !== null
       case 'graduation':
@@ -327,6 +330,9 @@ function App() {
     const { currentStep } = wizard
 
     switch (currentStep.id) {
+      case 'welcome':
+        return <WelcomeStep />
+
       case 'name':
         return (
           <NameStep

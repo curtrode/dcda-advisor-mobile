@@ -1,3 +1,4 @@
+export { WelcomeStep } from './WelcomeStep'
 export { NameStep } from './NameStep'
 export { GraduationStep } from './GraduationStep'
 export { CourseStep } from './CourseStep'

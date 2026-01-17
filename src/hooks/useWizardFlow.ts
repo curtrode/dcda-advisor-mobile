@@ -3,6 +3,7 @@ import type { WizardStep, WizardPart, RequirementCategoryId, StudentData } from 
 
 // Define all wizard steps - will be filtered based on degree type
 const ALL_PART_1_STEPS: WizardStep[] = [
+  { id: 'welcome', part: 'completed', title: 'Welcome to DCDA Advising' },
   { id: 'name', part: 'completed', title: "What's your name?" },
   { id: 'graduation', part: 'completed', title: 'When do you expect to graduate?' },
   { id: 'intro', part: 'completed', title: 'Have you completed the Intro/Req\'d English requirement?', categoryId: 'intro' },

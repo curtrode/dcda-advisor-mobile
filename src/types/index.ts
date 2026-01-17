@@ -131,6 +131,7 @@ export interface StudentData {
 export type WizardPart = 'completed' | 'schedule' | 'review'
 
 export type WizardStepId =
+  | 'welcome'
   | 'name'
   | 'graduation'
   | 'intro'
