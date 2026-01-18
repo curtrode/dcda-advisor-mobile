@@ -48,6 +48,29 @@
   --success: #22c55e;
 }
 
+.dark {
+  --background: #121212;
+  --foreground: #e5e5e5;
+  --card: #1e1e1e;
+  --card-foreground: #e5e5e5;
+  /* TCU Purple - slightly lighter for dark mode */
+  --primary: #6B3FA0;
+  --primary-foreground: #ffffff;
+  --primary-light: #8B5FC0;
+  /* Secondary/muted */
+  --secondary: #2a2a2a;
+  --secondary-foreground: #e5e5e5;
+  --muted: #2a2a2a;
+  --muted-foreground: #a0a0a0;
+  --accent: #2d1f3d;
+  --accent-foreground: #c9a8ff;
+  --destructive: #ef4444;
+  --border: #333333;
+  --input: #333333;
+  --ring: #8B5FC0;
+  --success: #22c55e;
+}
+
 @layer base {
   * {
     @apply border-border;

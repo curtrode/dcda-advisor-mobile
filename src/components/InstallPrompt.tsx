@@ -39,7 +39,7 @@ export function InstallPrompt() {
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
           <img 
-            src="/android-chrome-192x192.png" 
+            src={import.meta.env.BASE_URL + 'android-chrome-192x192.png'} 
             alt="App icon" 
             className="w-8 h-8 rounded"
           />

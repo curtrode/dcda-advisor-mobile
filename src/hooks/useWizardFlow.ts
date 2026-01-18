@@ -9,10 +9,10 @@ const ALL_PART_1_STEPS: WizardStep[] = [
   { id: 'intro', part: 'completed', title: 'Have you completed the Intro/Req\'d English requirement?', categoryId: 'intro' },
   { id: 'statistics', part: 'completed', title: 'Have you completed the Statistics requirement?', categoryId: 'statistics' },
   { id: 'coding', part: 'completed', title: 'Have you completed the Coding requirement?', categoryId: 'coding' },
-  { id: 'mmAuthoring', part: 'completed', title: 'Have you completed the MM Authoring requirement?', categoryId: 'mmAuthoring' },
+  { id: 'mmAuthoring', part: 'completed', title: 'Have you completed the Multimedia Authoring requirement?', categoryId: 'mmAuthoring' },
   // Capstone is auto-assigned based on graduation, no step needed
-  { id: 'dcElective', part: 'completed', title: 'Have you completed a DC Elective?', categoryId: 'dcElective' },
-  { id: 'daElective', part: 'completed', title: 'Have you completed a DA Elective?', categoryId: 'daElective' },
+  { id: 'dcElective', part: 'completed', title: 'Have you completed a Digital Culture Elective?', categoryId: 'dcElective' },
+  { id: 'daElective', part: 'completed', title: 'Have you completed a Data Analytics Elective?', categoryId: 'daElective' },
   { id: 'generalElectives', part: 'completed', title: 'Select any other completed DCDA courses', categoryId: 'generalElectives' },
   { id: 'specialCredits', part: 'completed', title: 'Any special credits?' },
 ]
@@ -76,10 +76,10 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
         intro: 'Intro/Req\'d English',
         statistics: 'Statistics',
         coding: 'Coding',
-        mmAuthoring: 'MM Authoring',
+        mmAuthoring: 'Multimedia Authoring',
         capstone: 'Capstone',
-        dcElective: 'DC Elective',
-        daElective: 'DA Elective',
+        dcElective: 'Digital Culture Elective',
+        daElective: 'Data Analytics Elective',
         generalElectives: 'General Electives',
       }
 

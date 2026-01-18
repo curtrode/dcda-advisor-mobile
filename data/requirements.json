@@ -29,7 +29,7 @@
         },
         {
           "id": "mmAuthoring",
-          "name": "MM Authoring",
+          "name": "Multimedia Authoring",
           "hours": 3,
           "courses": ["WRIT 40163", "WRIT 40263", "WRIT 40363", "WRIT 40463", "WRIT 40563", "CRWT 30363", "STCO 36403", "EDUC 50263"],
           "selectOne": true
@@ -94,7 +94,7 @@
         },
         {
           "id": "mmAuthoring",
-          "name": "MM Authoring",
+          "name": "Multimedia Authoring",
           "hours": 3,
           "courses": ["WRIT 40163", "WRIT 40263", "WRIT 40363", "WRIT 40463", "WRIT 40563", "CRWT 30363", "STCO 36403", "EDUC 50263"],
           "selectOne": true

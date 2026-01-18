@@ -13,6 +13,76 @@ import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/
 import { getCapstoneTargetSemester, getCourseByCode, buildSemesterPlan, type SemesterPlan } from '@/services/courses'
 import { cn } from '@/lib/utils'
 
+// Dual Progress Bar Component
+interface DualProgressProps {
+  majorHours: number
+  majorTotal: number
+  minorHours: number
+  minorTotal: number
+  selectedDegree: 'major' | 'minor'
+}
+
+function DualProgressBars({ majorHours, majorTotal, minorHours, minorTotal, selectedDegree }: DualProgressProps) {
+  const majorPercent = Math.min(100, Math.round((majorHours / majorTotal) * 100))
+  const minorPercent = Math.min(100, Math.round((minorHours / minorTotal) * 100))
+  
+  return (
+    <div className="bg-card border rounded-xl p-4 space-y-3">
+      <div className="text-sm font-medium text-muted-foreground">Progress Comparison</div>
+      
+      {/* Major Progress */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className={cn("font-medium", selectedDegree === 'major' ? 'text-primary' : 'text-muted-foreground')}>
+            Major {selectedDegree === 'major' && '(selected)'}
+          </span>
+          <span className="text-muted-foreground">{majorHours}/{majorTotal} hrs ({majorPercent}%)</span>
+        </div>
+        <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div 
+            className={cn(
+              "h-full rounded-full transition-all",
+              selectedDegree === 'major' ? 'bg-primary' : 'bg-muted-foreground/40'
+            )}
+            style={{ width: `${majorPercent}%` }}
+          />
+        </div>
+      </div>
+      
+      {/* Minor Progress */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className={cn("font-medium", selectedDegree === 'minor' ? 'text-primary' : 'text-muted-foreground')}>
+            Minor {selectedDegree === 'minor' && '(selected)'}
+          </span>
+          <span className="text-muted-foreground">{minorHours}/{minorTotal} hrs ({minorPercent}%)</span>
+        </div>
+        <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div 
+            className={cn(
+              "h-full rounded-full transition-all",
+              selectedDegree === 'minor' ? 'bg-primary' : 'bg-muted-foreground/40'
+            )}
+            style={{ width: `${minorPercent}%` }}
+          />
+        </div>
+      </div>
+      
+      {/* Insight message */}
+      {minorPercent === 100 && majorPercent < 100 && selectedDegree === 'major' && (
+        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+          ✓ You've completed enough for a minor! Continue {majorTotal - majorHours} more hours for the major.
+        </p>
+      )}
+      {majorPercent === 100 && selectedDegree === 'minor' && (
+        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+          ✓ You've completed enough courses for a major!
+        </p>
+      )}
+    </div>
+  )
+}
+
 interface ReviewStepProps {
   studentData: StudentData
   generalElectives?: string[]
@@ -140,7 +210,25 @@ function SemesterPlanTable({ plan }: SemesterPlanTableProps) {
 export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
-  const { degreeProgress } = useRequirements(studentData, generalElectives)
+  const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
+
+  // Calculate progress for both degree types (for dual progress bars)
+  const selectedDegreeType = studentData.degreeType || 'major'
+  const majorTotalHours = requirements.major.totalHours
+  const minorTotalHours = requirements.minor.totalHours
+  
+  // For the selected degree, use actual calculated progress
+  // For the other degree, do a simple count of completed course hours (capped)
+  const completedCourseHours = studentData.completedCourses.length * 3
+  const specialCreditHours = studentData.specialCredits.length * 3
+  const totalCompletedHours = completedCourseHours + specialCreditHours
+  
+  const majorHours = selectedDegreeType === 'major' 
+    ? (degreeProgress?.completedHours ?? 0)
+    : Math.min(totalCompletedHours, majorTotalHours)
+  const minorHours = selectedDegreeType === 'minor'
+    ? (degreeProgress?.completedHours ?? 0)
+    : Math.min(totalCompletedHours, minorTotalHours)
 
   const capstoneTarget = getCapstoneTargetSemester(studentData.expectedGraduation)
 
@@ -251,6 +339,15 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
           {studentData.name} • DCDA {studentData.degreeType === 'major' ? 'Major' : 'Minor'} • Graduating {studentData.expectedGraduation}
         </p>
       </div>
+
+      {/* Dual Progress Bars */}
+      <DualProgressBars
+        majorHours={majorHours}
+        majorTotal={majorTotalHours}
+        minorHours={minorHours}
+        minorTotal={minorTotalHours}
+        selectedDegree={selectedDegreeType}
+      />
 
       {/* Completed Courses */}
       {completedCount > 0 && (

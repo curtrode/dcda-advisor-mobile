@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { StepIndicator } from './StepIndicator'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/hooks/useTheme'
+import { Moon, Sun } from 'lucide-react'
 
 interface WizardShellProps {
   // Header
@@ -34,19 +36,28 @@ export function WizardShell({
   nextDisabled = false,
   showBackButton = true,
 }: WizardShellProps) {
+  const { isDark, toggleTheme } = useTheme()
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="bg-primary text-primary-foreground px-5 py-4 flex items-center gap-3 shrink-0">
         <img
-          src="/android-chrome-192x192.png"
+          src={import.meta.env.BASE_URL + 'android-chrome-192x192.png'}
           alt="DCDA"
           className="w-10 h-10 rounded-lg bg-white"
         />
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-semibold">DCDA Advisor</h1>
           <p className="text-xs opacity-80">Degree Planning Tool</p>
         </div>
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
       </header>
 
       {/* Step Indicator */}

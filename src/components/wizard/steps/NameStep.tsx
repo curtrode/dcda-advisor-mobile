@@ -60,6 +60,66 @@ export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNe
           </Button>
         </div>
       </div>
+
+      {/* Requirements Comparison Table */}
+      <div className="border rounded-lg overflow-hidden text-sm">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-3 py-2 text-left font-medium">Requirement</th>
+              <th className="px-3 py-2 text-center font-medium">Major</th>
+              <th className="px-3 py-2 text-center font-medium">Minor</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Total Hours</td>
+              <td className="px-3 py-2 text-center font-medium">33</td>
+              <td className="px-3 py-2 text-center font-medium">21</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Intro/English</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">—</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Statistics</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">1</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Coding</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">1</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Multimedia Authoring</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">1</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Capstone</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">1</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Digital Culture Elective</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">—</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Data Analytics Elective</td>
+              <td className="px-3 py-2 text-center">1</td>
+              <td className="px-3 py-2 text-center">—</td>
+            </tr>
+            <tr>
+              <td className="px-3 py-2 text-muted-foreground">Gen Electives</td>
+              <td className="px-3 py-2 text-center">4</td>
+              <td className="px-3 py-2 text-center">3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

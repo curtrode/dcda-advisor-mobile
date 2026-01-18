@@ -146,10 +146,10 @@ export const categoryNames: Record<RequirementCategoryId, string> = {
   intro: 'Intro/Req\'d English',
   statistics: 'Statistics',
   coding: 'Coding',
-  mmAuthoring: 'MM Authoring',
+  mmAuthoring: 'Multimedia Authoring',
   capstone: 'Capstone',
-  dcElective: 'DC Elective',
-  daElective: 'DA Elective',
+  dcElective: 'Digital Culture Elective',
+  daElective: 'Data Analytics Elective',
   generalElectives: 'General Electives',
 }
 

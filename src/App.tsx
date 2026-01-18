@@ -393,7 +393,7 @@ function App() {
           <CourseStep
             categoryId="dcElective"
             title="Which Digital Culture courses have you completed?"
-            hint="Select all DC courses you've taken. The first fulfills your DC Elective requirement; additional courses count as General Electives."
+            hint="Select all Digital Culture courses you've taken. The first fulfills your Digital Culture Elective requirement; additional courses count as General Electives."
             selectedCourse={null}
             selectedCourses={categorySelections.dcElectives}
             allSelectedCourses={[...excludeCourses, ...mmAuthoringCourses]}
@@ -429,7 +429,7 @@ function App() {
           <CourseStep
             categoryId="daElective"
             title="Which Data Analytics courses have you completed?"
-            hint="Select all DA courses you've taken. The first fulfills your DA Elective requirement; additional courses count as General Electives."
+            hint="Select all Data Analytics courses you've taken. The first fulfills your Data Analytics Elective requirement; additional courses count as General Electives."
             selectedCourse={null}
             selectedCourses={categorySelections.daElectives}
             allSelectedCourses={[...excludeCourses, ...codingCourses]}
