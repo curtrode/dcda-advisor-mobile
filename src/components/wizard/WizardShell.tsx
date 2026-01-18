@@ -19,6 +19,7 @@ interface WizardShellProps {
   canGoNext: boolean
   onBack: () => void
   onNext: () => void
+  onStepClick?: (index: number) => void
   nextLabel?: string
   nextDisabled?: boolean
   showBackButton?: boolean
@@ -32,6 +33,7 @@ export function WizardShell({
   canGoBack,
   onBack,
   onNext,
+  onStepClick,
   nextLabel = 'Next',
   nextDisabled = false,
   showBackButton = true,
@@ -61,7 +63,11 @@ export function WizardShell({
       </header>
 
       {/* Step Indicator */}
-      <StepIndicator totalSteps={totalSteps} currentStep={currentStep} />
+      <StepIndicator 
+        totalSteps={totalSteps} 
+        currentStep={currentStep} 
+        onStepClick={onStepClick} 
+      />
 
       {/* Part Label */}
       <div className="bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wide px-5 py-2">
@@ -74,7 +80,7 @@ export function WizardShell({
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t px-5 py-4 flex gap-3 safe-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
         {showBackButton && canGoBack && (
           <Button
             variant="secondary"

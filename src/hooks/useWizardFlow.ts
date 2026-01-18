@@ -20,6 +20,7 @@ const ALL_PART_1_STEPS: WizardStep[] = [
 // Steps that only apply to majors (not minors)
 const MAJOR_ONLY_STEPS: Set<string> = new Set(['intro', 'dcElective', 'daElective'])
 
+const TRANSITION_STEP: WizardStep = { id: 'transition', part: 'transition', title: 'Planning Your Schedule' }
 const REVIEW_STEP: WizardStep = { id: 'review', part: 'review', title: 'Review Your Plan' }
 
 export interface UseWizardFlowReturn {
@@ -36,6 +37,7 @@ export interface UseWizardFlowReturn {
   goNext: () => void
   goBack: () => void
   goToStep: (index: number) => void
+  goToStepId: (id: string) => void
 
   // Categories tracking
   unmetCategories: RequirementCategoryId[]
@@ -71,6 +73,12 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
 
     // Add Part 2 steps for each unmet category (excluding capstone which is auto-scheduled)
     const schedulableCategories = unmetCategories.filter(c => c !== 'capstone')
+    
+    // Add transition step if we have scheduling work to do
+    if (schedulableCategories.length > 0) {
+      allSteps.push(TRANSITION_STEP)
+    }
+
     for (const categoryId of schedulableCategories) {
       const categoryNames: Record<RequirementCategoryId, string> = {
         intro: 'Intro/Req\'d English',
@@ -105,6 +113,7 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
   const partLabel = useMemo(() => {
     switch (part) {
       case 'completed': return 'Part 1: Completed Courses'
+      case 'transition': return 'Phase 2'
       case 'schedule': return 'Part 2: Schedule for Spring 2026'
       case 'review': return 'Part 3: Review Your Plan'
     }
@@ -143,6 +152,14 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
     }
   }, [totalSteps])
 
+  const goToStepId = useCallback((id: string) => {
+    const index = steps.findIndex(s => s.id === id)
+    if (index !== -1) {
+      setCurrentStepIndex(index)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [steps])
+
   const reset = useCallback(() => {
     setCurrentStepIndex(0)
     setUnmetCategories([])
@@ -162,6 +179,7 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
     goNext,
     goBack,
     goToStep,
+    goToStepId,
     unmetCategories,
     setUnmetCategories,
     currentScheduleCategory,

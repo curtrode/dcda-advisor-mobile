@@ -42,9 +42,12 @@ export function SpecialCreditsStep({ credits, onAddCredit, onRemoveCredit }: Spe
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold mb-2">Any special credits?</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mb-4">
           Add transfer credits, study abroad courses, or one-time approvals.
         </p>
+        <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground border">
+          <span className="font-semibold">Tip:</span> If you aren't sure which category a transfer credit counts toward, you can list it as a "General Elective" for now and verify with your advisor later.
+        </div>
       </div>
 
       {/* Existing Credits */}

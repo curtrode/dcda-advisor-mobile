@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import { useStudentData } from '@/hooks/useStudentData'
 import { useWizardFlow } from '@/hooks/useWizardFlow'
 import {
@@ -8,6 +8,7 @@ import {
   GraduationStep,
   CourseStep,
   SpecialCreditsStep,
+  TransitionStep,
   ScheduleStep,
   ReviewStep,
 } from '@/components/wizard'
@@ -81,6 +82,9 @@ function App() {
 
   // Track skipped categories in Part 2
   const [skippedCategories, setSkippedCategories] = useState<Set<RequirementCategoryId>>(new Set())
+
+  // Track pending navigation after import
+  const [pendingImportNav, setPendingImportNav] = useState<'plan' | 'review' | null>(null)
 
   // All completed courses (for exclusion logic)
   const allCompletedCourses = useMemo(() => {
@@ -239,6 +243,28 @@ function App() {
     }
   }, [wizard, studentData, categorySelections, notYetSelections, scheduledSelections, skippedCategories])
 
+  // Helper: Calculate unmet categories based on selections
+  const calculateUnmetCategories = useCallback((
+    degreeType: 'major' | 'minor',
+    currentNotYetSelections: NotYetSelections
+  ): RequirementCategoryId[] => {
+    const unmet: RequirementCategoryId[] = []
+    
+    // For minors: statistics, coding, mmAuthoring
+    // For majors: intro, statistics, coding, mmAuthoring, dcElective, daElective
+    const requiredCategories: RequirementCategoryId[] = degreeType === 'minor'
+      ? ['statistics', 'coding', 'mmAuthoring']
+      : ['intro', 'statistics', 'coding', 'mmAuthoring', 'dcElective', 'daElective']
+
+    for (const cat of requiredCategories) {
+      if (currentNotYetSelections[cat]) {
+        unmet.push(cat)
+      }
+    }
+    
+    return unmet
+  }, [])
+
   // Handle next button
   const handleNext = useCallback(() => {
     const { currentStep, goNext, setUnmetCategories } = wizard
@@ -250,24 +276,12 @@ function App() {
       updateStudentData({ completedCourses })
 
       // Determine unmet categories for Part 2
-      const unmet: RequirementCategoryId[] = []
-      // For minors: statistics, coding, mmAuthoring
-      // For majors: intro, statistics, coding, mmAuthoring, dcElective, daElective
-      const requiredCategories: RequirementCategoryId[] = studentData.degreeType === 'minor'
-        ? ['statistics', 'coding', 'mmAuthoring']
-        : ['intro', 'statistics', 'coding', 'mmAuthoring', 'dcElective', 'daElective']
-
-      for (const cat of requiredCategories) {
-        if (notYetSelections[cat]) {
-          unmet.push(cat)
-        }
-      }
-
+      const unmet = calculateUnmetCategories(studentData.degreeType || 'major', notYetSelections)
       setUnmetCategories(unmet)
     }
 
     goNext()
-  }, [wizard, allCompletedCourses, updateStudentData, notYetSelections, studentData.degreeType])
+  }, [wizard, allCompletedCourses, updateStudentData, notYetSelections, studentData.degreeType, calculateUnmetCategories])
 
   // Handle start over
   const handleStartOver = useCallback(() => {
@@ -321,19 +335,30 @@ function App() {
       generalElectives: data.generalElectives,
     })
 
-    // Populate category selections from imported completed courses
-    // This allows the wizard to show the correct state when navigating
-    if (data.completedCourses && data.completedCourses.length > 0) {
-      const newSelections: CategorySelections = {
-        intro: null,
-        statistics: null,
-        coding: null,
-        mmAuthoring: null,
-        dcElectives: [],
-        daElectives: [],
-        generalElectives: data.generalElectives || [],
-      }
+    // Populate category selections and not-yet selections from imported data
+    let newSelections: CategorySelections = {
+      intro: null,
+      statistics: null,
+      coding: null,
+      mmAuthoring: null,
+      dcElectives: [],
+      daElectives: [],
+      generalElectives: data.generalElectives || [],
+    }
 
+    // Default: assume Not Yet for all, then mark false if found
+    let newNotYet: NotYetSelections = {
+      intro: true,
+      statistics: true,
+      coding: true,
+      mmAuthoring: true,
+      capstone: false, // Auto-handled
+      dcElective: true,
+      daElective: true,
+      generalElectives: false,
+    }
+
+    if (data.completedCourses) {
       // Get courses for each required category
       const introCourses = getRequiredCategoryCourses('intro', degreeType)
       const statsCourses = getRequiredCategoryCourses('statistics', degreeType)
@@ -346,25 +371,60 @@ function App() {
       for (const code of data.completedCourses) {
         if (introCourses.includes(code) && !newSelections.intro) {
           newSelections.intro = code
+          newNotYet.intro = false
         } else if (statsCourses.includes(code) && !newSelections.statistics) {
           newSelections.statistics = code
+          newNotYet.statistics = false
         } else if (codingCourses.includes(code) && !newSelections.coding) {
           newSelections.coding = code
+          newNotYet.coding = false
         } else if (mmCourses.includes(code) && !newSelections.mmAuthoring) {
           newSelections.mmAuthoring = code
+          newNotYet.mmAuthoring = false
         } else if (dcCourses.includes(code)) {
           newSelections.dcElectives.push(code)
+          newNotYet.dcElective = false // At least one taken
         } else if (daCourses.includes(code)) {
           newSelections.daElectives.push(code)
+          newNotYet.daElective = false // At least one taken
         }
       }
-
-      setCategorySelections(newSelections)
     }
 
-    // Move to the review step (last step)
-    wizard.goToStep(wizard.totalSteps - 1)
-  }, [updateStudentData, wizard])
+    setCategorySelections(newSelections)
+    setNotYetSelections(newNotYet)
+
+    // Calculate Unmet Categories immediately
+    const unmet = calculateUnmetCategories(degreeType, newNotYet)
+    wizard.setUnmetCategories(unmet)
+
+    // Decide where to send user:
+    // If there are unmet requirements, send to Plan phase (Transition step)
+    // Otherwise, send to Review (Completed)
+    setPendingImportNav(unmet.length > 0 ? 'plan' : 'review')
+
+  }, [updateStudentData, wizard, calculateUnmetCategories])
+
+  // Effect to handle navigation after import (once wizard steps have updated)
+  useEffect(() => {
+    if (pendingImportNav) {
+      if (pendingImportNav === 'plan') {
+         // Wait for unmet categories to update before navigating
+         if (wizard.unmetCategories.length > 0) {
+            if (wizard.goToStepId) {
+               wizard.goToStepId('transition')
+               setPendingImportNav(null)
+            }
+         }
+      } else {
+         // Review doesn't depend on unmet categories
+         if (wizard.goToStepId) {
+            wizard.goToStepId('review')
+            setPendingImportNav(null)
+         }
+      }
+    }
+  }, [pendingImportNav, wizard])
 
   // Render current step content
   const renderStep = () => {
@@ -494,6 +554,15 @@ function App() {
           />
         )
 
+      case 'transition':
+        return (
+          <TransitionStep
+            onNext={wizard.goNext}
+            unmetCount={wizard.unmetCategories.length}
+            selections={categorySelections}
+          />
+        )
+
       case 'schedule':
         if (currentStep.categoryId) {
           return (
@@ -547,6 +616,7 @@ function App() {
         canGoNext={wizard.canGoNext}
         onBack={wizard.goBack}
         onNext={wizard.isLastStep ? handleStartOver : handleNext}
+        onStepClick={wizard.goToStep}
         nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
         nextDisabled={!canProceed}
         showBackButton={true}

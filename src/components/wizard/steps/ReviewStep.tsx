@@ -160,47 +160,41 @@ function SemesterPlanTable({ plan }: SemesterPlanTableProps) {
         <CalendarDays className="size-4" />
         <span className="font-semibold text-sm">Suggested Semester Plan</span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              {plan.map(({ semester }) => (
-                <th key={semester} className="px-3 py-2 text-left font-medium text-xs whitespace-nowrap">
-                  {semester}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {/* Find max courses in any semester */}
-            {Array.from({ length: Math.max(...plan.map(p => p.courses.length)) }).map((_, rowIdx) => (
-              <tr key={rowIdx} className="border-b last:border-b-0">
-                {plan.map(({ semester, courses }) => {
-                  const course = courses[rowIdx]
-                  return (
-                    <td key={semester} className="px-3 py-2 align-top">
-                      {course ? (
-                        <div>
-                          <div className={cn(
-                            "font-medium text-xs",
-                            course.code === '—' ? 'text-muted-foreground' : ''
-                          )}>
-                            {course.code}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground truncate max-w-[80px]">
-                            {course.category}
-                          </div>
-                        </div>
-                      ) : null}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      
+      {/* Responsive Grid Layout - Stacks on mobile, Grid on larger screens */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+        {plan.map(({ semester, courses }) => (
+          <div key={semester} className="bg-card p-4 flex flex-col gap-3">
+            <div className="font-semibold text-xs uppercase tracking-wider text-muted-foreground border-b pb-1">
+              {semester}
+            </div>
+            
+            {courses.length > 0 ? (
+              <div className="space-y-2">
+                {courses.map((course, idx) => (
+                  <div key={idx} className="bg-muted/40 rounded px-2.5 py-2 border border-border/50">
+                    <div className={cn(
+                      "font-medium text-xs",
+                      course.code === '—' ? 'text-muted-foreground' : ''
+                    )}>
+                      {course.code}
+                    </div>
+                    {course.category && (
+                      <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                        {course.category}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground italic py-1">No courses</div>
+            )}
+          </div>
+        ))}
       </div>
-      <div className="px-4 py-2 text-[10px] text-muted-foreground border-t bg-muted/30">
+
+      <div className="px-4 py-3 text-[10px] text-muted-foreground border-t bg-muted/30">
         — indicates course to be determined. Plan is a suggestion only.
       </div>
     </div>

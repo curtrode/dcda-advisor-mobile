@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Info } from 'lucide-react'
+import { Info, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RequirementCategoryId, Course } from '@/types'
 import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
@@ -62,6 +63,7 @@ export function CourseStep({
   degreeType,
 }: CourseStepProps) {
   const [infoCourse, setInfoCourse] = useState<Course | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   
   // Get courses for this category, excluding already selected courses
   const categoryCourses = getCoursesForCategory(categoryId, degreeType, completedRequiredCourses)
@@ -78,25 +80,39 @@ export function CourseStep({
       !isMutuallyExcluded(course.code, allSelectedCourses.filter((c) => c !== course.code))
   )
 
+  // Search filter
+  const searchedCourses = filteredCourses.filter(course => {
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      course.code.toLowerCase().includes(q) ||
+      course.title.toLowerCase().includes(q) ||
+      course.description?.toLowerCase().includes(q)
+    )
+  })
+
   // Check if this is a DC or DA elective category (single category multi-select with "not yet")
   const isSingleCategoryMultiSelect = categoryId === 'dcElective' || categoryId === 'daElective'
 
+  // Is filtering needed? (Long lists)
+  const showSearch = categoryCourses.length > 10
+
   if (multiSelect) {
     // Group courses by category
-    const digitalCultureCourses = filteredCourses.filter((c) => c.category === 'Digital Culture')
-    const dataAnalyticsCourses = filteredCourses.filter((c) => c.category === 'Data Analytics')
-    const mmAuthoringCourses = filteredCourses.filter((c) => c.category === 'Multimedia Authoring')
-    const honorsCourses = filteredCourses.filter((c) => c.category === 'Honors Seminars & Capstone')
+    const digitalCultureCourses = searchedCourses.filter((c) => c.category === 'Digital Culture')
+    const dataAnalyticsCourses = searchedCourses.filter((c) => c.category === 'Data Analytics')
+    const mmAuthoringCourses = searchedCourses.filter((c) => c.category === 'Multimedia Authoring')
+    const honorsCourses = searchedCourses.filter((c) => c.category === 'Honors Seminars & Capstone')
 
     // For DC/DA electives, only show the relevant category
     const coursesToShow = isSingleCategoryMultiSelect
       ? (categoryId === 'dcElective' ? digitalCultureCourses : dataAnalyticsCourses)
-      : filteredCourses
-
+      : searchedCourses
+    
     // For general electives on majors, only show MM Authoring and Honors (DC/DA already captured)
     const isGeneralElectivesForMajor = categoryId === 'generalElectives' && degreeType === 'major'
 
-    const renderCourseList = (courses: typeof filteredCourses) => {
+    const renderCourseList = (courses: typeof searchedCourses) => {
       return courses.map((course) => {
         const isSelected = selectedCourses.includes(course.code)
         const selectionIndex = selectedCourses.indexOf(course.code)
@@ -164,8 +180,25 @@ export function CourseStep({
           {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
         </div>
 
+        {/* Search Input */}
+        {showSearch && (
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search courses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        )}
+
         <div className="space-y-6">
-          {isSingleCategoryMultiSelect ? (
+          {searchedCourses.length === 0 ? (
+             <div className="text-center py-8 text-black/50">
+               No courses found matching "{searchQuery}"
+             </div>
+          ) : isSingleCategoryMultiSelect ? (
             // Single category (DC or DA electives)
             <div className="space-y-3">
               {renderCourseList(coursesToShow)}
@@ -249,6 +282,19 @@ export function CourseStep({
         )}
       </div>
 
+      {/* Search Input */}
+      {showSearch && (
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search courses..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      )}
+
       <RadioGroup
         value={isNotYetSelected ? 'not-yet' : (selectedCourse || '')}
         onValueChange={(value) => {
@@ -259,7 +305,13 @@ export function CourseStep({
           }
         }}
       >
-        {filteredCourses.map((course) => (
+        {searchedCourses.length === 0 && showSearch && (
+           <div className="text-center py-8 text-black/50">
+             No courses found matching "{searchQuery}"
+           </div>
+        )}
+
+        {searchedCourses.map((course) => (
           <label
             key={course.code}
             className={cn(
