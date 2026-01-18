@@ -46,9 +46,9 @@ export function WizardShell({
       <header className="bg-primary text-primary-foreground px-6 py-6 flex items-center gap-4 shrink-0 shadow-xl relative z-20">
         <div className="bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20">
           <img
-            src={import.meta.env.BASE_URL + 'android-chrome-192x192.png'}
+            src={import.meta.env.BASE_URL + 'DCDA_AddRan_logo.jpg'}
             alt="DCDA"
-            className="w-12 h-12 rounded-xl bg-white shadow-sm"
+            className="h-12 w-auto rounded-lg bg-white shadow-sm object-contain"
           />
         </div>
         <div className="flex-1 min-w-0">

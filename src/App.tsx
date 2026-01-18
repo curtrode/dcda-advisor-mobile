@@ -555,11 +555,20 @@ function App() {
         )
 
       case 'transition':
+        // Merge special credits into general electives for display
+        const transitionSelections = {
+          ...categorySelections,
+          generalElectives: [
+            ...categorySelections.generalElectives,
+            ...studentData.specialCredits.map(c => `${c.description} (${c.type})`)
+          ]
+        }
+
         return (
           <TransitionStep
             onNext={wizard.goNext}
             unmetCount={wizard.unmetCategories.length}
-            selections={categorySelections}
+            selections={transitionSelections}
             includeSummer={studentData.includeSummer || false}
             onToggleSummer={(include) => updateStudentData({ includeSummer: include })}
           />

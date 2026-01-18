@@ -13,6 +13,7 @@ interface TransitionStepProps {
     mmAuthoring: string | null
     dcElectives: string[]
     daElectives: string[]
+    generalElectives: string[]
   }
   includeSummer: boolean
   onToggleSummer: (include: boolean) => void
@@ -82,6 +83,20 @@ export function TransitionStep({ onNext, unmetCount, selections, includeSummer, 
                   <div className="flex flex-wrap gap-1.5">
                     {selections.daElectives.map(c => (
                       <span key={c} className="font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded text-xs">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* General Electives */}
+              {selections.generalElectives.length > 0 && (
+                <div className="px-4 py-2.5 text-sm space-y-1">
+                  <div className="text-muted-foreground mb-1">{categoryNames.generalElectives}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selections.generalElectives.map(c => (
+                      <span key={c} className="font-medium bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs">
                         {c}
                       </span>
                     ))}

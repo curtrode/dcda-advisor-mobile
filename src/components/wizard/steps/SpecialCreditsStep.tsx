@@ -28,7 +28,8 @@ export function SpecialCreditsStep({ credits, onAddCredit, onRemoveCredit }: Spe
   const [showForm, setShowForm] = useState(false)
   const [type, setType] = useState<SpecialCredit['type']>('transfer')
   const [description, setDescription] = useState('')
-  const [countsAs, setCountsAs] = useState<RequirementCategoryId>('generalElectives')
+  // Previously we allowed selecting a category, but now we default to generalElectives for simplicity
+  const countsAs: RequirementCategoryId = 'generalElectives'
 
   const handleAdd = () => {
     if (description.trim()) {
@@ -45,8 +46,9 @@ export function SpecialCreditsStep({ credits, onAddCredit, onRemoveCredit }: Spe
         <p className="text-sm text-muted-foreground mb-4">
           Add transfer credits, study abroad courses, or one-time approvals.
         </p>
-        <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground border">
-          <span className="font-semibold">Tip:</span> If you aren't sure which category a transfer credit counts toward, you can list it as a "General Elective" for now and verify with your advisor later.
+        <div className="bg-muted/50 p-4 rounded-lg text-sm text-muted-foreground border border-neutral-200 dark:border-neutral-800">
+           <p className="mb-2"><span className="font-semibold text-primary">Note:</span> For simplicity, all special credits are added as <strong>General Electives</strong> in this tool.</p>
+           <p>If you believe a credit should count toward a specific requirement (like Statistics or Coding), please <strong>consult your advisor</strong> to verify and update your official degree plan.</p>
         </div>
       </div>
 
@@ -99,24 +101,6 @@ export function SpecialCreditsStep({ credits, onAddCredit, onRemoveCredit }: Spe
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">Counts Toward</label>
-            <Select value={countsAs} onValueChange={(v) => setCountsAs(v as RequirementCategoryId)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="intro">{categoryNames.intro}</SelectItem>
-                <SelectItem value="statistics">{categoryNames.statistics}</SelectItem>
-                <SelectItem value="coding">{categoryNames.coding}</SelectItem>
-                <SelectItem value="mmAuthoring">{categoryNames.mmAuthoring}</SelectItem>
-                <SelectItem value="dcElective">{categoryNames.dcElective}</SelectItem>
-                <SelectItem value="daElective">{categoryNames.daElective}</SelectItem>
-                <SelectItem value="generalElectives">{categoryNames.generalElectives}</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex gap-2">
