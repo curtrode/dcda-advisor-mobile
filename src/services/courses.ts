@@ -154,12 +154,15 @@ export const categoryNames: Record<RequirementCategoryId, string> = {
 }
 
 // Generate list of semesters from Spring 2026 to a target graduation semester
-export function getSemestersUntilGraduation(expectedGraduation: string | null): string[] {
+export function getSemestersUntilGraduation(expectedGraduation: string | null, includeSummer: boolean = false): string[] {
   const semesters: string[] = []
   
   if (!expectedGraduation) {
     // Default to 4 semesters if no graduation date
-    return ['Spring 2026', 'Fall 2026', 'Spring 2027', 'Fall 2027']
+    const defaultPlan = ['Spring 2026', 'Fall 2026', 'Spring 2027', 'Fall 2027']
+    return includeSummer 
+      ? ['Spring 2026', 'Summer 2026', 'Fall 2026', 'Spring 2027', 'Summer 2027', 'Fall 2027']
+      : defaultPlan
   }
   
   const match = expectedGraduation.match(/(Spring|Fall|Summer)\s+(\d{4})/)
@@ -175,13 +178,22 @@ export function getSemestersUntilGraduation(expectedGraduation: string | null): 
   let season: 'Spring' | 'Summer' | 'Fall' = 'Spring'
   
   while (true) {
-    const semesterName = `${season} ${year}`
-    semesters.push(semesterName)
+    const isSummer = season === 'Summer'
+    
+    // Check if we should include this semester
+    // We always include the target graduation semester, even if it's summer and includeSummer is false
+    // (User explicitly said they are graduating then)
+    const isGradSemester = year === gradYear && season === gradSeason
+    
+    if (!isSummer || includeSummer || isGradSemester) {
+      const semesterName = `${season} ${year}`
+      semesters.push(semesterName)
+    }
     
     // Check if we've reached graduation
     if (year === gradYear && season === gradSeason) break
     if (year > gradYear) break
-    if (semesters.length > 12) break // Safety limit
+    if (semesters.length > 15) break // Safety limit
     
     // Advance to next semester
     if (season === 'Spring') {
@@ -208,9 +220,10 @@ export function buildSemesterPlan(
   scheduledCourses: string[],
   scheduledCategories: Record<string, string>, // course code -> category name
   neededCategories: { category: string; name: string; remaining: number }[],
-  expectedGraduation: string | null
+  expectedGraduation: string | null,
+  includeSummer: boolean = false
 ): SemesterPlan[] {
-  const semesters = getSemestersUntilGraduation(expectedGraduation)
+  const semesters = getSemestersUntilGraduation(expectedGraduation, includeSummer)
   const plan: SemesterPlan[] = semesters.map(s => ({ semester: s, courses: [] }))
   
   if (plan.length === 0) return plan

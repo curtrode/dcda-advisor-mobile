@@ -300,7 +300,8 @@ export function ReviewStep({ studentData, generalElectives }: ReviewStepProps) {
     studentData.scheduledCourses,
     scheduledCourseCategories,
     neededCategories,
-    studentData.expectedGraduation
+    studentData.expectedGraduation,
+    studentData.includeSummer || false
   )
 
   const handlePreview = () => {

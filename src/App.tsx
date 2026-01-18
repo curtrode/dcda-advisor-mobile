@@ -560,6 +560,8 @@ function App() {
             onNext={wizard.goNext}
             unmetCount={wizard.unmetCategories.length}
             selections={categorySelections}
+            includeSummer={studentData.includeSummer || false}
+            onToggleSummer={(include) => updateStudentData({ includeSummer: include })}
           />
         )
 

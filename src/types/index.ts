@@ -127,6 +127,8 @@ export interface StudentData {
   courseCategories?: Partial<Record<FlexibleCourseCode, FlexibleCourseCategory>>
   // Explicit general electives selection (to preserve categorization on CSV re-import)
   generalElectives?: string[]
+  // Planning preferences
+  includeSummer?: boolean
 }
 
 // Wizard step types

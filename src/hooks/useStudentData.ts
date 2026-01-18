@@ -11,6 +11,7 @@ const defaultStudentData: StudentData = {
   scheduledCourses: [],
   specialCredits: [],
   courseCategories: {},
+  includeSummer: false,
 }
 
 export function useStudentData() {

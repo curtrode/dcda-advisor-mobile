@@ -43,22 +43,24 @@ export function WizardShell({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground px-5 py-4 flex items-center gap-3 shrink-0">
-        <img
-          src={import.meta.env.BASE_URL + 'android-chrome-192x192.png'}
-          alt="DCDA"
-          className="w-10 h-10 rounded-lg bg-white"
-        />
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold">DCDA Advisor</h1>
-          <p className="text-xs opacity-80">Degree Planning Tool</p>
+      <header className="bg-primary text-primary-foreground px-6 py-6 flex items-center gap-4 shrink-0 shadow-xl relative z-20">
+        <div className="bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20">
+          <img
+            src={import.meta.env.BASE_URL + 'android-chrome-192x192.png'}
+            alt="DCDA"
+            className="w-12 h-12 rounded-xl bg-white shadow-sm"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-extrabold tracking-tight leading-none truncate">DCDA Advisor</h1>
+          <p className="text-sm font-medium text-primary-foreground/80 mt-1 truncate">Degree Planning Tool</p>
         </div>
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          className="p-3 rounded-xl hover:bg-white/10 active:bg-white/20 transition-all border border-white/10 backdrop-blur-sm"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
         </button>
       </header>
 
@@ -70,7 +72,7 @@ export function WizardShell({
       />
 
       {/* Part Label */}
-      <div className="bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wide px-5 py-2">
+      <div className="bg-primary/90 text-primary-foreground text-xs font-bold uppercase tracking-wider px-6 py-3 shadow-sm relative z-10 backdrop-blur-sm border-t border-white/10">
         {partLabel}
       </div>
 

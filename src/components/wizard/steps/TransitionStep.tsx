@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, CheckCircle2, CalendarClock, History } from 'lucide-react'
 import { categoryNames } from '@/services/courses'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface TransitionStepProps {
   onNext: () => void
@@ -13,9 +14,11 @@ interface TransitionStepProps {
     dcElectives: string[]
     daElectives: string[]
   }
+  includeSummer: boolean
+  onToggleSummer: (include: boolean) => void
 }
 
-export function TransitionStep({ onNext, unmetCount, selections }: TransitionStepProps) {
+export function TransitionStep({ onNext, unmetCount, selections, includeSummer, onToggleSummer }: TransitionStepProps) {
   // Helper to check if a category has any selections
   const hasSelection = (key: keyof typeof selections) => {
     const val = selections[key]
@@ -89,15 +92,31 @@ export function TransitionStep({ onNext, unmetCount, selections }: TransitionSte
           </div>
         )}
 
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-4 text-left">
-          <div className="bg-primary/10 p-2 rounded-lg shrink-0">
-            <CalendarClock className="w-6 h-6 text-primary" />
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-4 text-left">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-2 rounded-lg shrink-0">
+              <CalendarClock className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-primary">Your Next Steps</p>
+              <p className="text-sm text-muted-foreground">
+                We have identified <span className="font-bold text-foreground">{unmetCount} requirements</span> you still need to fulfill.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold text-primary">Your Next Steps</p>
-            <p className="text-sm text-muted-foreground">
-              We have identified <span className="font-bold text-foreground">{unmetCount} requirements</span> you still need to fulfill.
-            </p>
+
+          <div className="flex items-center space-x-2 pt-2 border-t mt-1">
+            <Checkbox 
+              id="summer" 
+              checked={includeSummer} 
+              onCheckedChange={(checked) => onToggleSummer(checked === true)} 
+            />
+            <label
+              htmlFor="summer"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Include summer terms in my plan
+            </label>
           </div>
         </div>
       </div>
