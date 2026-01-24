@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Eye, Printer, Download, CalendarDays, Calendar, Mail, Cloud, LogOut, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Eye, Printer, Download, CalendarDays, Calendar, Mail, Cloud, LogOut, CheckCircle, AlertCircle, Loader2, ClipboardCopy } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
 import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
@@ -211,6 +211,9 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
   const [previewFilename, setPreviewFilename] = useState<string>('')
   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
 
+  // Clipboard state
+  const [clipboardCopied, setClipboardCopied] = useState(false)
+
   // OneDrive state
   const [azureAccount, setAzureAccount] = useState<AccountInfo | null>(null)
   const [oneDriveSaving, setOneDriveSaving] = useState(false)
@@ -341,6 +344,37 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
   const handleDownloadPdf = () => {
     if (previewUrl) {
       downloadPdf(previewUrl, previewFilename)
+    }
+  }
+
+  const handleCopyForExcel = async () => {
+    // Generate a tab-separated row for pasting into Excel
+    // Columns: Date, Name, Degree Type, Expected Graduation, Completed Courses, Scheduled Courses, Special Credits, Notes
+    const date = new Date().toLocaleDateString()
+    const completed = studentData.completedCourses.join(', ')
+    const scheduled = studentData.scheduledCourses.join(', ')
+    const specialCredits = studentData.specialCredits
+      .map(c => `${c.type}: ${c.description} (${c.countsAs})`)
+      .join('; ')
+    const notes = (studentData.notes || '').replace(/[\t\n]/g, ' ') // Clean for Excel
+
+    const row = [
+      date,
+      studentData.name,
+      studentData.degreeType || '',
+      studentData.expectedGraduation || '',
+      completed,
+      scheduled,
+      specialCredits,
+      notes,
+    ].join('\t')
+
+    try {
+      await navigator.clipboard.writeText(row)
+      setClipboardCopied(true)
+      setTimeout(() => setClipboardCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
     }
   }
 
@@ -484,6 +518,28 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
           <Download className="size-5" />
           Save CSV
         </Button>
+
+        {/* Copy for Excel (Program Records) */}
+        <div className="pt-3 border-t space-y-2">
+          <div className="text-xs text-muted-foreground px-1">
+            Copy record for program assessment spreadsheet
+          </div>
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-3"
+            onClick={handleCopyForExcel}
+          >
+            {clipboardCopied ? (
+              <CheckCircle className="size-5 text-green-600" />
+            ) : (
+              <ClipboardCopy className="size-5" />
+            )}
+            {clipboardCopied ? 'Copied!' : 'Copy for Excel'}
+          </Button>
+          <p className="text-[10px] text-muted-foreground px-1">
+            Paste into your OneDrive spreadsheet to build advising records over time.
+          </p>
+        </div>
 
         {/* OneDrive Save Section */}
         {azureConfigured && (
