@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Eye, Printer, Download, CalendarDays, Calendar, Mail, Cloud, LogOut, CheckCircle, AlertCircle, Loader2, ClipboardCopy } from 'lucide-react'
+import { Eye, Printer, Download, CalendarDays, Calendar, Mail, Cloud, LogOut, CheckCircle, AlertCircle, Loader2, Send } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
 import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
@@ -211,9 +211,6 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
   const [previewFilename, setPreviewFilename] = useState<string>('')
   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
 
-  // Clipboard state
-  const [clipboardCopied, setClipboardCopied] = useState(false)
-
   // OneDrive state
   const [azureAccount, setAzureAccount] = useState<AccountInfo | null>(null)
   const [oneDriveSaving, setOneDriveSaving] = useState(false)
@@ -347,35 +344,48 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
     }
   }
 
-  const handleCopyForExcel = async () => {
-    // Generate a tab-separated row for pasting into Excel
-    // Columns: Date, Name, Degree Type, Expected Graduation, Completed Courses, Scheduled Courses, Special Credits, Notes
-    const date = new Date().toLocaleDateString()
-    const completed = studentData.completedCourses.join(', ')
-    const scheduled = studentData.scheduledCourses.join(', ')
-    const specialCredits = studentData.specialCredits
-      .map(c => `${c.type}: ${c.description} (${c.countsAs})`)
-      .join('; ')
-    const notes = (studentData.notes || '').replace(/[\t\n]/g, ' ') // Clean for Excel
+  const handleSubmitToAdvisor = () => {
+    // Build structured email body
+    const completed = studentData.completedCourses.join(', ') || 'None'
+    const scheduled = studentData.scheduledCourses.join(', ') || 'None'
+    const specialCredits = studentData.specialCredits.length > 0
+      ? studentData.specialCredits
+          .map(c => `- ${c.type}: ${c.description} (counts as ${c.countsAs})`)
+          .join('\n')
+      : 'None'
 
-    const row = [
-      date,
-      studentData.name,
-      studentData.degreeType || '',
-      studentData.expectedGraduation || '',
-      completed,
-      scheduled,
-      specialCredits,
-      notes,
-    ].join('\t')
+    const subject = `DCDA Advising Record: ${studentData.name}`
+    const body = `DCDA ADVISING RECORD
+====================
+Date: ${new Date().toLocaleDateString()}
 
-    try {
-      await navigator.clipboard.writeText(row)
-      setClipboardCopied(true)
-      setTimeout(() => setClipboardCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
+STUDENT INFORMATION
+-------------------
+Name: ${studentData.name}
+Degree Type: ${studentData.degreeType === 'major' ? 'Major' : 'Minor'}
+Expected Graduation: ${studentData.expectedGraduation || 'Not specified'}
+
+COMPLETED COURSES
+-----------------
+${completed}
+
+SCHEDULED COURSES (Spring 2026)
+-------------------------------
+${scheduled}
+
+SPECIAL CREDITS
+---------------
+${specialCredits}
+
+NOTES/QUESTIONS
+---------------
+${studentData.notes || 'None'}
+
+---
+Submitted via DCDA Advisor Mobile`
+
+    const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    window.open(mailtoUrl, '_blank')
   }
 
   const handleAzureSignIn = async () => {
@@ -519,25 +529,21 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
           Save CSV
         </Button>
 
-        {/* Copy for Excel (Program Records) */}
+        {/* Submit to Advisor */}
         <div className="pt-3 border-t space-y-2">
           <div className="text-xs text-muted-foreground px-1">
-            Copy record for program assessment spreadsheet
+            Submit your advising record for program records
           </div>
           <Button
-            variant="outline"
+            variant="default"
             className="w-full justify-start gap-3"
-            onClick={handleCopyForExcel}
+            onClick={handleSubmitToAdvisor}
           >
-            {clipboardCopied ? (
-              <CheckCircle className="size-5 text-green-600" />
-            ) : (
-              <ClipboardCopy className="size-5" />
-            )}
-            {clipboardCopied ? 'Copied!' : 'Copy for Excel'}
+            <Send className="size-5" />
+            Submit to Advisor
           </Button>
           <p className="text-[10px] text-muted-foreground px-1">
-            Paste into your OneDrive spreadsheet to build advising records over time.
+            Opens an email with your advising data. Just click Send!
           </p>
         </div>
 
