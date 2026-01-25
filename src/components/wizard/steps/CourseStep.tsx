@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Info, Search } from 'lucide-react'
+import { Info, Search, Check, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RequirementCategoryId, Course } from '@/types'
 import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
@@ -180,6 +180,41 @@ export function CourseStep({
           {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
         </div>
 
+        {/* Status + Not Yet - at top */}
+        {isSingleCategoryMultiSelect && (
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
+              selectedCourses.length > 0
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                : isNotYetSelected
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  : "bg-muted text-muted-foreground"
+            )}>
+              {selectedCourses.length > 0 ? (
+                <><Check className="h-4 w-4" />{selectedCourses.length} selected</>
+              ) : isNotYetSelected ? (
+                <><Circle className="h-4 w-4" />Not yet</>
+              ) : (
+                <><Circle className="h-4 w-4" />Select below</>
+              )}
+            </div>
+            
+            <button
+              type="button"
+              onClick={onSelectNotYet}
+              className={cn(
+                "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+                isNotYetSelected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border hover:border-primary hover:text-primary"
+              )}
+            >
+              Haven't taken any
+            </button>
+          </div>
+        )}
+
         {/* Search Input */}
         {showSearch && (
           <div className="relative">
@@ -218,22 +253,6 @@ export function CourseStep({
             </>
           )}
         </div>
-
-        {/* Not yet option for DC/DA electives */}
-        {isSingleCategoryMultiSelect && (
-          <button
-            type="button"
-            onClick={onSelectNotYet}
-            className={cn(
-              "w-full flex items-center justify-center p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
-              isNotYetSelected
-                ? "border-primary bg-accent text-primary"
-                : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-            )}
-          >
-            <span className="text-sm font-medium">Haven't taken any yet</span>
-          </button>
-        )}
 
         {/* Empty state for general electives */}
         {categoryId === 'generalElectives' && (
@@ -280,6 +299,39 @@ export function CourseStep({
             Select the course you've completed, or "Not yet" if still needed.
           </p>
         )}
+      </div>
+
+      {/* Status + Not Yet - at top */}
+      <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
+          selectedCourse && !isNotYetSelected
+            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+            : isNotYetSelected
+              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              : "bg-muted text-muted-foreground"
+        )}>
+          {selectedCourse && !isNotYetSelected ? (
+            <><Check className="h-4 w-4" />{selectedCourse}</>
+          ) : isNotYetSelected ? (
+            <><Circle className="h-4 w-4" />Not yet</>
+          ) : (
+            <><Circle className="h-4 w-4" />Select below</>
+          )}
+        </div>
+        
+        <button
+          type="button"
+          onClick={onSelectNotYet}
+          className={cn(
+            "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+            isNotYetSelected
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border hover:border-primary hover:text-primary"
+          )}
+        >
+          Not yet
+        </button>
       </div>
 
       {/* Search Input */}
@@ -329,19 +381,6 @@ export function CourseStep({
             <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
           </label>
         ))}
-
-        {/* Not Yet Option */}
-        <label
-          className={cn(
-            "flex items-center justify-center p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
-            isNotYetSelected
-              ? "border-primary bg-accent text-primary"
-              : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-          )}
-        >
-          <RadioGroupItem value="not-yet" className="sr-only" />
-          <span className="text-sm font-medium">Not yet completed</span>
-        </label>
       </RadioGroup>
 
       {/* Course Info Dialog */}
