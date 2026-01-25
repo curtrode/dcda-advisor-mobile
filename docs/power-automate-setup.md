@@ -53,26 +53,40 @@ Click the trigger to expand it. Set these parameters:
 - **Include Attachments**: No
 - Click **Show advanced options** if needed
 
-## Step 4: Add Compose Action (Extract JSON)
+## Step 4: Add Compose Action (Extract Base64 Data)
 
 1. Click **+ New step**
 2. Search for **Compose** (under Data Operations)
-3. Click in the **Inputs** field
-4. Click **Expression** tab (not Dynamic content)
-5. Paste this expression and click **OK**:
+3. Rename it to: `Extract Base64`
+4. Click in the **Inputs** field
+5. Click **Expression** tab (not Dynamic content)
+6. Paste this expression and click **OK**:
 
 ```
 substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),21),sub(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_END-->'),add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),21)))
 ```
 
-**Note**: This extracts everything between the JSON markers. The number 21 is the length of `<!--DCDA_JSON_START-->` (21 characters).
+## Step 5: Add Compose Action (Decode Base64)
 
-## Step 5: Add Parse JSON Action
+1. Click **+ New step**
+2. Search for **Compose** (under Data Operations)
+3. Rename it to: `Decode JSON`
+4. Click in the **Inputs** field
+5. Click **Expression** tab
+6. Paste this expression and click **OK**:
+
+```
+base64ToString(outputs('Extract_Base64'))
+```
+
+**Note**: The JSON data is base64-encoded to prevent formatting issues with email HTML encoding.
+
+## Step 6: Add Parse JSON Action
 
 1. Click **+ New step**
 2. Search for **Parse JSON** (under Data Operations)
 3. Click in the **Content** field
-4. In the **Dynamic content** tab, select **Outputs** (from the Compose step)
+4. In the **Dynamic content** tab, select **Outputs** (from the `Decode JSON` step)
 5. Click **Generate from sample** button
 6. Paste this sample and click **Done**:
 
@@ -80,7 +94,7 @@ substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/bod
 {"version":"2.0","timestamp":"2026-01-24T12:00:00.000Z","name":"John Smith","degreeType":"major","expectedGraduation":"Spring 2027","progressHours":15,"totalHours":30,"progressPercent":50,"completedCourses":"DCDA 1000; DCDA 2000","scheduledCourses":"DCDA 3000","specialCredits":"","notes":"Sample notes"}
 ```
 
-## Step 6: Add Excel Action (Add Row)
+## Step 7: Add Excel Action (Add Row)
 
 1. Click **+ New step**
 2. Search for **Add a row into a table** (Excel Online Business)
@@ -111,7 +125,7 @@ substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/bod
    | ScheduledCourses | scheduledCourses |
    | Notes | notes |
 
-## Step 7: Save and Test
+## Step 8: Save and Test
 
 1. Click **Save** (top right)
 2. Use the DCDA Advisor app to submit a test record
@@ -153,8 +167,12 @@ substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/bod
 └──────────────────┬──────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────┐
-│ Compose: Extract JSON from email body       │
+│ Compose: Extract Base64 from email body     │
 │ (text between the JSON markers)             │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│ Compose: Decode Base64 to JSON string       │
 └──────────────────┬──────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────┐

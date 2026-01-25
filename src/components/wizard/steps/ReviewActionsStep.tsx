@@ -206,9 +206,7 @@ ${studentData.notes || 'None'}
 ───────────────────────────────────────
          DATA (for automation)
 ───────────────────────────────────────
-<!--DCDA_JSON_START-->
-${JSON.stringify(jsonData)}
-<!--DCDA_JSON_END-->
+<!--DCDA_JSON_START-->${btoa(JSON.stringify(jsonData))}<!--DCDA_JSON_END-->
 
 Submitted via DCDA Advisor Mobile`
 
