@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { GraduationCap, BookOpen, ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { ChevronDown, ChevronUp, Info } from 'lucide-react'
+
+const BASE_URL = import.meta.env.BASE_URL
 
 interface NameStepProps {
   value: string
@@ -46,19 +48,19 @@ export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNe
           <Button
             type="button"
             variant={degreeType === 'major' ? 'default' : 'outline'}
-            className={`h-20 flex-col gap-2 ${degreeType === 'major' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+            className={`h-24 flex-col gap-2 ${degreeType === 'major' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
             onClick={() => onDegreeTypeChange('major')}
           >
-            <GraduationCap className="h-6 w-6" />
+            <img src={`${BASE_URL}major_icon.png`} alt="" className="h-10 w-10" />
             <span className="font-medium">Major</span>
           </Button>
           <Button
             type="button"
             variant={degreeType === 'minor' ? 'default' : 'outline'}
-            className={`h-20 flex-col gap-2 ${degreeType === 'minor' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+            className={`h-24 flex-col gap-2 ${degreeType === 'minor' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
             onClick={() => onDegreeTypeChange('minor')}
           >
-            <BookOpen className="h-6 w-6" />
+            <img src={`${BASE_URL}minor.png`} alt="" className="h-10 w-10" />
             <span className="font-medium">Minor</span>
           </Button>
         </div>

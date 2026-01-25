@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
-import { Upload, ClipboardList, CalendarDays, FileCheck, Send } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+
+// Step icons from public folder
+const BASE_URL = import.meta.env.BASE_URL
 import {
   Dialog,
   DialogContent,
@@ -61,7 +64,7 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
             <p className="font-semibold text-foreground">Record Your History</p>
             <p className="text-xs text-muted-foreground">Tell us what you've already taken</p>
           </div>
-          <ClipboardList className="w-5 h-5 text-primary/60 shrink-0" />
+          <img src={`${BASE_URL}go_back_icon.png`} alt="" className="w-8 h-8 shrink-0" />
         </div>
 
         <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
@@ -72,7 +75,7 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
             <p className="font-semibold text-foreground">Plan Your Semester</p>
             <p className="text-xs text-muted-foreground">Schedule upcoming courses</p>
           </div>
-          <CalendarDays className="w-5 h-5 text-primary/60 shrink-0" />
+          <img src={`${BASE_URL}plan_icon.png`} alt="" className="w-8 h-8 shrink-0" />
         </div>
 
         <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
@@ -83,7 +86,7 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
             <p className="font-semibold text-foreground">Review Your Plan</p>
             <p className="text-xs text-muted-foreground">See your personalized degree audit</p>
           </div>
-          <FileCheck className="w-5 h-5 text-primary/60 shrink-0" />
+          <img src={`${BASE_URL}review_icon.png`} alt="" className="w-8 h-8 shrink-0" />
         </div>
 
         <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
@@ -94,7 +97,7 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
             <p className="font-semibold text-foreground">Save & Submit</p>
             <p className="text-xs text-muted-foreground">Export and schedule an appointment</p>
           </div>
-          <Send className="w-5 h-5 text-primary/60 shrink-0" />
+          <img src={`${BASE_URL}submit_icon.png`} alt="" className="w-8 h-8 shrink-0" />
         </div>
       </div>
 
