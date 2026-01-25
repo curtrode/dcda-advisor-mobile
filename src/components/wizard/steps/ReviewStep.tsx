@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -365,25 +365,23 @@ export function ReviewStep({ studentData, generalElectives, updateStudentData }:
     const totalHours = selectedDegreeType === 'major' ? majorTotalHours : minorTotalHours
     const progressPercent = Math.round((progressHours / totalHours) * 100)
 
-    // Build CSV data for machine parsing (compact format)
-    const csvData = [
-      'DCDA_MOBILE_EXPORT,v1',
-      `name,${studentData.name}`,
-      `degreeType,${studentData.degreeType || ''}`,
-      `expectedGraduation,${studentData.expectedGraduation || ''}`,
-      `completedCourses,${studentData.completedCourses.join(';')}`,
-      `scheduledCourses,${studentData.scheduledCourses.join(';')}`,
-      studentData.specialCredits.length > 0
-        ? `specialCredits,${JSON.stringify(studentData.specialCredits.map(c => ({ type: c.type, description: c.description, countsAs: c.countsAs })))}`
+    // Build JSON data for Power Automate parsing
+    const jsonData = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      name: studentData.name,
+      degreeType: studentData.degreeType || '',
+      expectedGraduation: studentData.expectedGraduation || '',
+      progressHours,
+      totalHours,
+      progressPercent,
+      completedCourses: studentData.completedCourses.join('; '),
+      scheduledCourses: studentData.scheduledCourses.join('; '),
+      specialCredits: studentData.specialCredits.length > 0
+        ? studentData.specialCredits.map(c => `${c.type}: ${c.description} (${c.countsAs})`).join('; ')
         : '',
-      studentData.courseCategories && Object.keys(studentData.courseCategories).length > 0
-        ? `courseCategories,${JSON.stringify(studentData.courseCategories)}`
-        : '',
-      generalElectives && generalElectives.length > 0
-        ? `generalElectives,${generalElectives.join(';')}`
-        : '',
-      studentData.notes ? `notes,${studentData.notes.replace(/\n/g, '\\n')}` : '',
-    ].filter(Boolean).join('\n')
+      notes: studentData.notes || '',
+    }
 
     const subject = `DCDA Advising Record: ${studentData.name}`
     const body = `═══════════════════════════════════════
@@ -420,11 +418,12 @@ ${remainingSection}
 ───────────────────────────────────────
 ${studentData.notes || 'None'}
 
-═══════════════════════════════════════
-         CSV DATA (for records)
-═══════════════════════════════════════
-${csvData}
-═══════════════════════════════════════
+───────────────────────────────────────
+         DATA (for automation)
+───────────────────────────────────────
+<!--DCDA_JSON_START-->
+${JSON.stringify(jsonData)}
+<!--DCDA_JSON_END-->
 
 Submitted via DCDA Advisor Mobile`
 
