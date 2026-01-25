@@ -11,9 +11,10 @@ import type { StudentData } from '@/types'
 
 interface WelcomeStepProps {
   onImport?: (data: Partial<StudentData>) => void
+  onNext?: () => void
 }
 
-export function WelcomeStep({ onImport }: WelcomeStepProps) {
+export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showFerpa, setShowFerpa] = useState(false)
 
@@ -56,32 +57,43 @@ export function WelcomeStep({ onImport }: WelcomeStepProps) {
         </div>
       </div>
 
-      {/* Import Plan */}
-      {onImport && (
-        <div className="bg-muted/50 border rounded-lg p-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <div className="flex gap-2 items-center">
+      {/* Action Buttons */}
+      <div className="bg-muted/50 border rounded-lg p-3 space-y-3">
+        {onImport && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              Returning? Pick up where you left off:
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </>
+        )}
+        <div className="flex gap-2">
+          {onImport && (
             <Button
               variant="outline"
-              size="sm"
               className="flex-1"
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Import Plan
+              Import
             </Button>
-            <p className="text-xs text-muted-foreground flex-1">
-              or click <strong>Next</strong> to start fresh
-            </p>
-          </div>
+          )}
+          {onNext && (
+            <Button
+              className="flex-1"
+              onClick={onNext}
+            >
+              {onImport ? 'Start Fresh' : 'Get Started'}
+            </Button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Inline info links */}
       {/* TODO: Update FERPA notice text once Power Automate integration is enabled (data will be sent externally) */}
@@ -118,12 +130,6 @@ export function WelcomeStep({ onImport }: WelcomeStepProps) {
           </p>
         </DialogContent>
       </Dialog>
-
-      {!onImport && (
-        <p className="text-sm text-muted-foreground text-center pt-2">
-          Click "Next" to begin planning your degree requirements
-        </p>
-      )}
     </div>
   )
 }

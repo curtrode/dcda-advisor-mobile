@@ -3,7 +3,12 @@ import coursesData from '../../data/courses.json'
 import offeringsData from '../../data/offerings-sp26.json'
 import requirementsData from '../../data/requirements.json'
 
-const courses = coursesData as Course[]
+// Deduplicate courses by code (keep first occurrence)
+const coursesRaw = coursesData as Course[]
+const courses = coursesRaw.filter((course, index, self) => 
+  index === self.findIndex((c) => c.code === course.code)
+)
+
 const offerings = offeringsData as { term: string; offeredCodes: string[]; sections: CourseSection[] }
 const requirements = requirementsData as typeof requirementsData
 

@@ -496,7 +496,7 @@ function App() {
 
     switch (currentStep.id) {
       case 'welcome':
-        return <WelcomeStep onImport={handleImport} />
+        return <WelcomeStep onImport={handleImport} onNext={handleNext} />
 
       case 'name':
         return (
@@ -727,6 +727,7 @@ function App() {
         nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
         nextDisabled={!canProceed}
         showBackButton={true}
+        showNextButton={wizard.currentStep.id !== 'welcome'}
       >
         {renderStep()}
       </WizardShell>

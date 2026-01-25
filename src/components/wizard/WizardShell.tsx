@@ -23,6 +23,7 @@ interface WizardShellProps {
   nextLabel?: string
   nextDisabled?: boolean
   showBackButton?: boolean
+  showNextButton?: boolean
 }
 
 export function WizardShell({
@@ -37,6 +38,7 @@ export function WizardShell({
   nextLabel = 'Next',
   nextDisabled = false,
   showBackButton = true,
+  showNextButton = true,
 }: WizardShellProps) {
   const { isDark, toggleTheme } = useTheme()
 
@@ -82,24 +84,28 @@ export function WizardShell({
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
-        {showBackButton && canGoBack && (
-          <Button
-            variant="secondary"
-            onClick={onBack}
-            className="flex-1"
-          >
-            Back
-          </Button>
-        )}
-        <Button
-          onClick={onNext}
-          disabled={nextDisabled}
-          className={cn("flex-1", !canGoBack && "w-full")}
-        >
-          {nextLabel}
-        </Button>
-      </nav>
+      {(showNextButton || (showBackButton && canGoBack)) && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
+          {showBackButton && canGoBack && (
+            <Button
+              variant="secondary"
+              onClick={onBack}
+              className="flex-1"
+            >
+              Back
+            </Button>
+          )}
+          {showNextButton && (
+            <Button
+              onClick={onNext}
+              disabled={nextDisabled}
+              className={cn("flex-1", !canGoBack && "w-full")}
+            >
+              {nextLabel}
+            </Button>
+          )}
+        </nav>
+      )}
     </div>
   )
 }
