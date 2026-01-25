@@ -58,7 +58,20 @@ npm run preview  # Preview production build
 - **Firebase Hosting**: Alternative deployment configured in [firebase.json](../firebase.json) (SPA rewrites enabled)
 
 ## Testing
-⚠️ **No test framework configured yet.** Testing infrastructure needs to be developed.
+**Vitest + React Testing Library** configured with jsdom environment.
+
+```bash
+npm run test          # Watch mode
+npm run test:run      # Single run
+npm run test:coverage # Coverage report
+```
+
+**Test files**: `*.test.ts` or `*.test.tsx` alongside source files  
+**Setup**: [test/setup.ts](../src/test/setup.ts) includes jest-dom matchers
+
+**Current coverage**:
+- [courses.test.ts](../src/services/courses.test.ts) - Course service functions (14 tests)
+- [useRequirements.test.ts](../src/hooks/useRequirements.test.ts) - Degree progress calculation (12 tests)
 
 ## Critical Patterns
 
