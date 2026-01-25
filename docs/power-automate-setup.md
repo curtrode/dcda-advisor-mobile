@@ -62,8 +62,23 @@ Click the trigger to expand it. Set these parameters:
 5. Paste this expression and click **OK**:
 
 ```
-substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),22),sub(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_END-->'),add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),22)))
+substring(triggerOutputs()?['body/bodyPreview'],add(indexOf(triggerOutputs()?['body/bodyPreview'],'<!--DCDA_JSON_START-->'),22),sub(indexOf(triggerOutputs()?['body/bodyPreview'],'<!--DCDA_JSON_END-->'),add(indexOf(triggerOutputs()?['body/bodyPreview'],'<!--DCDA_JSON_START-->'),22)))
 ```
+
+**Note:** If this doesn't work, try using `body/body` instead of `body/bodyPreview` in the expression. You can check the flow run history to see what the email body looks like.
+
+### Alternative: Use two Compose steps (more reliable)
+
+If the expression above fails, try this approach instead:
+
+**Step 4a: Compose - Get Start Position**
+- Expression: `add(indexOf(triggerOutputs()?['body/bodyPreview'],'<!--DCDA_JSON_START-->'),22)`
+
+**Step 4b: Compose - Get End Position**
+- Expression: `indexOf(triggerOutputs()?['body/bodyPreview'],'<!--DCDA_JSON_END-->')`
+
+**Step 4c: Compose - Extract JSON**
+- Expression: `substring(triggerOutputs()?['body/bodyPreview'],outputs('Compose_-_Get_Start_Position'),sub(outputs('Compose_-_Get_End_Position'),outputs('Compose_-_Get_Start_Position')))`
 
 ## Step 5: Add Parse JSON Action
 
