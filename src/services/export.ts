@@ -19,57 +19,8 @@ const creditTypeLabels: Record<string, string> = {
   'one-time-approval': 'Approval',
 }
 
-// Advisor CSV Export - simple format for Power Automate
-export function exportAdvisorCSV(studentData: StudentData, progressData: { progressHours: number, totalHours: number, progressPercent: number }): string {
-  const timestamp = new Date().toISOString()
-  const sanitize = (text: string) => text.replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')
-
-  // CSV with headers matching Excel columns
-  const headers = ['Timestamp', 'Name', 'DegreeType', 'ExpectedGraduation', 'ProgressHours', 'TotalHours', 'ProgressPercent', 'CompletedCourses', 'ScheduledCourses', 'SpecialCredits', 'Notes']
-
-  const specialCreditsStr = studentData.specialCredits.length > 0
-    ? studentData.specialCredits.map(c => `${c.type}: ${c.description} (${c.countsAs})`).join('; ')
-    : ''
-
-  const row = [
-    timestamp,
-    sanitize(studentData.name || ''),
-    studentData.degreeType || '',
-    studentData.expectedGraduation || '',
-    progressData.progressHours.toString(),
-    progressData.totalHours.toString(),
-    progressData.progressPercent.toString(),
-    studentData.completedCourses.join('; '),
-    studentData.scheduledCourses.join('; '),
-    sanitize(specialCreditsStr),
-    sanitize(studentData.notes || ''),
-  ]
-
-  const csvContent = headers.join(',') + '\n' + row.map(v => `"${v}"`).join(',')
-  return csvContent
-}
-
-export function downloadAdvisorCSV(studentData: StudentData, progressData: { progressHours: number, totalHours: number, progressPercent: number }): string {
-  const csvContent = exportAdvisorCSV(studentData, progressData)
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-
-  const today = new Date().toISOString().split('T')[0]
-  const filename = `DCDA_Record_${studentData.name?.replace(/\s+/g, '_') || 'Student'}_${today}.csv`
-
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-
-  return filename
-}
-
 // CSV Export - saves student data for later import
-export function exportToCSV(studentData: StudentData): void {
+export function exportToCSV(studentData: StudentData): string {
   const lines: string[] = []
 
   // Header with version for future compatibility
@@ -125,6 +76,8 @@ export function exportToCSV(studentData: StudentData): void {
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+
+  return filename
 }
 
 // CSV Import - restores student data from a previously exported file

@@ -10,7 +10,7 @@ import {
 import { Eye, Printer, Download, Calendar, Mail, Send } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
-import { generatePdfBlob, downloadPdf, printPdf, exportToCSV, downloadAdvisorCSV } from '@/services/export'
+import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
 
 interface ReviewActionsStepProps {
   studentData: StudentData
@@ -110,42 +110,37 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   }
 
   const handleSubmitToAdvisor = () => {
+    // Download the CSV file first
+    const filename = exportToCSV({ ...studentData, generalElectives })
+
+    // Show alert with instructions
+    alert(`Your advising plan has been downloaded as:\n\n${filename}\n\nAn email will now open. Please attach the downloaded file before sending.`)
+
+    // Build a simple email body (advisor-facing)
     const date = new Date().toLocaleDateString()
     const degreeLabel = studentData.degreeType === 'major' ? 'Major' : 'Minor'
-
     const progressHours = selectedDegreeType === 'major' ? majorHours : minorHours
     const totalHours = selectedDegreeType === 'major' ? majorTotalHours : minorTotalHours
     const progressPercent = Math.round((progressHours / totalHours) * 100)
 
-    // Download the CSV file first
-    const filename = downloadAdvisorCSV(studentData, { progressHours, totalHours, progressPercent })
-
-    // Build a simple email body
     const subject = `DCDA Advising Record: ${studentData.name}`
     const body = `DCDA Advising Record
-═══════════════════════════════════════
 
-Name: ${studentData.name}
-Degree Type: DCDA ${degreeLabel}
+Student: ${studentData.name}
+Degree: DCDA ${degreeLabel}
 Expected Graduation: ${studentData.expectedGraduation || 'Not specified'}
 Date: ${date}
 Progress: ${progressHours}/${totalHours} hours (${progressPercent}%)
 
-───────────────────────────────────────
-IMPORTANT: Please attach the CSV file that was just downloaded:
-${filename}
-───────────────────────────────────────
-
 Notes/Questions:
 ${studentData.notes || 'None'}
 
+---
+Advising plan CSV attached.
 Submitted via DCDA Advisor Mobile`
 
-    // Small delay to ensure download starts before email opens
-    setTimeout(() => {
-      const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-      window.open(mailtoUrl, '_blank')
-    }, 500)
+    const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    window.open(mailtoUrl, '_blank')
   }
 
   return (
