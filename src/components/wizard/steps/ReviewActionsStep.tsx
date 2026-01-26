@@ -206,7 +206,9 @@ ${studentData.notes || 'None'}
 ───────────────────────────────────────
          DATA (for automation)
 ───────────────────────────────────────
-<!--DCDA_JSON_START-->${btoa(JSON.stringify(jsonData))}<!--DCDA_JSON_END-->
+[DCDA_DATA_START]
+${btoa(JSON.stringify(jsonData)).match(/.{1,72}/g)?.join('\n') || btoa(JSON.stringify(jsonData))}
+[DCDA_DATA_END]
 
 Submitted via DCDA Advisor Mobile`
 
