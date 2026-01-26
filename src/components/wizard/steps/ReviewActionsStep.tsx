@@ -139,7 +139,8 @@ ${studentData.notes || 'None'}
 Advising plan CSV attached.
 Submitted via DCDA Advisor Mobile`
 
-    const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    const cc = studentData.email ? `&cc=${encodeURIComponent(studentData.email)}` : ''
+    const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}${cc}`
     window.open(mailtoUrl, '_blank')
   }
 

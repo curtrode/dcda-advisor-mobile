@@ -28,6 +28,9 @@ export function exportToCSV(studentData: StudentData): string {
 
   // Student info
   lines.push(`name,${escapeCSV(studentData.name)}`)
+  if (studentData.email) {
+    lines.push(`email,${escapeCSV(studentData.email)}`)
+  }
   lines.push(`degreeType,${studentData.degreeType || ''}`)
   lines.push(`expectedGraduation,${studentData.expectedGraduation || ''}`)
 
@@ -108,6 +111,9 @@ export function parseCSVImport(csvContent: string): Partial<StudentData> | null 
       switch (key) {
         case 'name':
           data.name = value
+          break
+        case 'email':
+          data.email = value
           break
         case 'degreeType':
           if (value === 'major' || value === 'minor') {

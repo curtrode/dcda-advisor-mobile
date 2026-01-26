@@ -7,13 +7,15 @@ const BASE_URL = import.meta.env.BASE_URL
 
 interface NameStepProps {
   value: string
+  email?: string
   degreeType: 'major' | 'minor' | null
   onChange: (name: string) => void
+  onEmailChange: (email: string) => void
   onDegreeTypeChange: (type: 'major' | 'minor') => void
   onNext?: () => void
 }
 
-export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNext }: NameStepProps) {
+export function NameStep({ value, email, degreeType, onChange, onEmailChange, onDegreeTypeChange, onNext }: NameStepProps) {
   const [showRequirements, setShowRequirements] = useState(false)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -41,6 +43,19 @@ export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNe
         onKeyDown={handleKeyDown}
         autoFocus
       />
+
+      <div>
+        <h3 className="text-lg font-medium mb-2">Your TCU email</h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          You'll receive a copy when you submit your plan.
+        </p>
+        <Input
+          type="email"
+          placeholder="name@tcu.edu"
+          value={email || ''}
+          onChange={(e) => onEmailChange(e.target.value)}
+        />
+      </div>
 
       <div>
         <h3 className="text-lg font-medium mb-3">Are you pursuing a major or minor?</h3>

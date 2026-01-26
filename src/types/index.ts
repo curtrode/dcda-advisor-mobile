@@ -118,6 +118,7 @@ export type FlexibleCourseCode = typeof FLEXIBLE_COURSES[number]
 // Student data (stored in localStorage)
 export interface StudentData {
   name: string
+  email?: string
   degreeType: 'major' | 'minor' | null
   expectedGraduation: string | null
   completedCourses: string[]
