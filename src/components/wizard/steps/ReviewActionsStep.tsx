@@ -109,14 +109,17 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
     }
   }
 
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false)
+  const [downloadedFilename, setDownloadedFilename] = useState('')
+
   const handleSubmitToAdvisor = () => {
     // Download the CSV file first
     const filename = exportToCSV({ ...studentData, generalElectives })
+    setDownloadedFilename(filename)
+    setShowSubmitDialog(true)
+  }
 
-    // Show alert with instructions
-    alert(`Your advising plan has been downloaded as:\n\n${filename}\n\nAn email will now open. Please attach the downloaded file before sending.`)
-
-    // Build a simple email body (advisor-facing)
+  const handleOpenEmail = () => {
     const date = new Date().toLocaleDateString()
     const degreeLabel = studentData.degreeType === 'major' ? 'Major' : 'Minor'
     const progressHours = selectedDegreeType === 'major' ? majorHours : minorHours
@@ -142,6 +145,7 @@ Submitted via DCDA Advisor Mobile`
     const cc = studentData.email ? `&cc=${encodeURIComponent(studentData.email)}` : ''
     const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}${cc}`
     window.open(mailtoUrl, '_blank')
+    setShowSubmitDialog(false)
   }
 
   return (
@@ -265,6 +269,31 @@ Submitted via DCDA Advisor Mobile`
             <Button onClick={handleDownloadPdf} className="flex-1">
               <Download className="size-4 mr-2" />
               Download
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Submit Instructions Dialog */}
+      <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Almost done!</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p>Your advising plan has been downloaded:</p>
+            <p className="font-mono text-sm bg-muted p-2 rounded break-all">{downloadedFilename}</p>
+            <p className="text-sm text-muted-foreground">
+              Click the button below to open an email. <strong>Don't forget to attach the downloaded file</strong> before sending.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setShowSubmitDialog(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleOpenEmail} className="flex-1">
+              <Mail className="size-4 mr-2" />
+              Open Email
             </Button>
           </div>
         </DialogContent>
