@@ -1,6 +1,6 @@
-# Power Automate: Email to OneDrive Excel
+# Power Automate: Email Attachment to OneDrive
 
-This guide sets up automatic transfer of DCDA advising records from email to an Excel spreadsheet in OneDrive.
+This guide sets up automatic saving of DCDA advising record attachments from email to OneDrive.
 
 ## Prerequisites
 
@@ -8,39 +8,16 @@ This guide sets up automatic transfer of DCDA advising records from email to an 
 - Access to Power Automate (flow.microsoft.com)
 - OneDrive for Business
 
-## Step 1: Create the Excel Spreadsheet
+## Step 1: Create the OneDrive Folder
 
-1. Open OneDrive and create a new folder: `DCDA_Advising_Records`
-2. Create a **new blank Excel workbook**: `Advising_Log.xlsx`
-3. In cell A1, add these column headers across the first row:
-
-```
-A1: Timestamp
-B1: Name
-C1: DegreeType
-D1: ExpectedGraduation
-E1: ProgressHours
-F1: TotalHours
-G1: ProgressPercent
-H1: CompletedCourses
-I1: ScheduledCourses
-J1: Notes
-```
-
-**Important**: Column headers must be single words (no spaces) for Power Automate compatibility.
-
-4. Select cells A1:J1
-5. Go to **Insert** > **Table**
-6. Check "My table has headers" and click OK
-7. With the table selected, go to **Table Design** tab
-8. In the "Table Name" field (top left), rename it to: `AdvisingRecords`
-9. Save and **close the file completely**
+1. Open OneDrive
+2. Create a new folder: `DCDA_Advising_Records`
 
 ## Step 2: Create the Power Automate Flow
 
 1. Go to [flow.microsoft.com](https://flow.microsoft.com)
 2. Click **Create** > **Automated cloud flow**
-3. Name it: `DCDA Email to Excel`
+3. Name it: `DCDA Email Attachments to OneDrive`
 4. Choose trigger: **When a new email arrives (V3)** (Office 365 Outlook)
 5. Click **Create**
 
@@ -50,162 +27,116 @@ Click the trigger to expand it. Set these parameters:
 
 - **Folder**: Inbox
 - **Subject Filter**: `DCDA Advising Record:`
-- **Include Attachments**: No
-- Click **Show advanced options** if needed
+- **Include Attachments**: Yes
+- **Only with Attachments**: Yes
 
-## Step 4: Add Compose Action (Extract Base64 Data)
-
-1. Click **+ New step**
-2. Search for **Compose** (under Data Operations)
-3. Rename it to: `Extract Base64`
-4. Click in the **Inputs** field
-5. Click **Expression** tab (not Dynamic content)
-6. Paste this expression and click **OK**:
-
-```
-substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_START]'),17),sub(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_END]'),add(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_START]'),17)))
-```
-
-## Step 5: Add Compose Action (Clean Base64)
+## Step 4: Add Apply to Each (for attachments)
 
 1. Click **+ New step**
-2. Search for **Compose** (under Data Operations)
-3. Rename it to: `Clean Base64`
-4. Click in the **Inputs** field
-5. Click **Expression** tab
-6. Paste this expression and click **OK**:
+2. Search for **Apply to each** (under Control)
+3. Click in the "Select an output from previous steps" field
+4. In **Dynamic content**, select **Attachments** (from the trigger)
 
-```
-replace(replace(replace(outputs('Extract_Base64'),decodeUriComponent('%0A'),''),decodeUriComponent('%0D'),''),' ','')
-```
+## Step 5: Add Create File Action (inside Apply to Each)
 
-**Note**: This removes line breaks and spaces that email clients may insert into the Base64 string.
+1. Inside the "Apply to each" block, click **Add an action**
+2. Search for **Create file** (OneDrive for Business)
+3. Configure:
+   - **Folder Path**: `/DCDA_Advising_Records`
+   - **File Name**: Click in the field, then from **Dynamic content** select **Attachments Name**
+   - **File Content**: Click in the field, then from **Dynamic content** select **Attachments Content**
 
-## Step 6: Add Compose Action (Decode Base64)
+## Step 6: (Optional) Add Email Notification
 
-1. Click **+ New step**
-2. Search for **Compose** (under Data Operations)
-3. Rename it to: `Decode JSON`
-4. Click in the **Inputs** field
-5. Click **Expression** tab
-6. Paste this expression and click **OK**:
+1. After the "Apply to each" block, click **+ New step**
+2. Search for **Send an email (V2)** (Office 365 Outlook)
+3. Configure:
+   - **To**: your email address
+   - **Subject**: `DCDA Record Saved: ` then add **From** (Dynamic content from trigger)
+   - **Body**: `A new advising record has been saved to OneDrive.`
 
-```
-base64ToString(outputs('Clean_Base64'))
-```
-
-**Note**: The JSON data is base64-encoded and split across multiple lines to prevent email client formatting issues.
-
-## Step 7: Add Parse JSON Action
-
-1. Click **+ New step**
-2. Search for **Parse JSON** (under Data Operations)
-3. Click in the **Content** field
-4. In the **Dynamic content** tab, select **Outputs** (from the `Decode JSON` step)
-5. Click **Generate from sample** button
-6. Paste this sample and click **Done**:
-
-```json
-{"version":"2.0","timestamp":"2026-01-24T12:00:00.000Z","name":"John Smith","degreeType":"major","expectedGraduation":"Spring 2027","progressHours":15,"totalHours":30,"progressPercent":50,"completedCourses":"DCDA 1000; DCDA 2000","scheduledCourses":"DCDA 3000","specialCredits":"","notes":"Sample notes"}
-```
-
-## Step 8: Add Excel Action (Add Row)
-
-1. Click **+ New step**
-2. Search for **Add a row into a table** (Excel Online Business)
-3. Configure the connection:
-   - **Location**: OneDrive for Business
-   - **Document Library**: OneDrive
-   - **File**: Browse to `/DCDA_Advising_Records/Advising_Log.xlsx`
-   - **Table**: Select `AdvisingRecords`
-
-4. After selecting the table, column fields should appear. If you get an error about "dynamic schema too large":
-   - Make sure the Excel file is closed
-   - Delete any extra columns/data in the spreadsheet
-   - Ensure only columns A-J have headers
-   - Try refreshing the flow editor
-
-5. Map each column by clicking the field and selecting from **Dynamic content** > **Parse JSON**:
-
-   | Field | Select from Parse JSON |
-   |-------|----------------------|
-   | Timestamp | timestamp |
-   | Name | name |
-   | DegreeType | degreeType |
-   | ExpectedGraduation | expectedGraduation |
-   | ProgressHours | progressHours |
-   | TotalHours | totalHours |
-   | ProgressPercent | progressPercent |
-   | CompletedCourses | completedCourses |
-   | ScheduledCourses | scheduledCourses |
-   | Notes | notes |
-
-## Step 9: Save and Test
+## Step 7: Save and Test
 
 1. Click **Save** (top right)
 2. Use the DCDA Advisor app to submit a test record
-3. In Power Automate, click **Test** > **Manually** > **Test**
-4. Send the test email
-5. Watch the flow run and check for errors
-6. Open your Excel file in OneDrive to verify the row was added
+3. Make sure to **attach the downloaded CSV** to the email before sending
+4. In Power Automate, click **Test** > **Manually** > **Test**
+5. Send the test email with attachment
+6. Check your OneDrive folder for the saved file
 
 ## Troubleshooting
-
-### "Dynamic schema too large" error
-- Close the Excel file completely before editing the flow
-- Delete all empty columns beyond J
-- Delete all rows except the header row
-- Make sure column headers have no spaces
-- Refresh the browser and try again
 
 ### Flow doesn't trigger
 - Check the subject filter matches exactly: `DCDA Advising Record:`
 - Make sure email arrives in Inbox (not spam/junk)
-- Wait a few minutes - there can be a delay
+- Verify "Only with Attachments" is set to Yes
+- Make sure the CSV file is attached before sending
 
-### JSON parsing fails
-- Check the Compose step outputs in flow run history
-- The email must contain `[DCDA_DATA_START]` and `[DCDA_DATA_END]` markers
-- Verify the "Clean Base64" step is removing all line breaks and spaces
-- Make sure you're using the updated version of the app
+### File not saved
+- Verify the folder path is correct: `/DCDA_Advising_Records`
+- Check that the folder exists in OneDrive
+- Look at the flow run history for error details
 
-### Excel row not added
-- Verify the file path is correct
-- Ensure the table is named exactly `AdvisingRecords`
-- Check that the Excel file isn't open elsewhere
+### Duplicate files
+- Power Automate will overwrite files with the same name
+- Each CSV has a unique filename with student name and date
 
 ## Flow Summary
 
 ```
-┌─────────────────────────────────────────────┐
-│ Trigger: New email arrives                  │
-│ Subject contains "DCDA Advising Record:"    │
-└──────────────────┬──────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────┐
-│ Compose: Extract Base64 from email body     │
-│ (text between [DCDA_DATA_START/END] markers)│
-└──────────────────┬──────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────┐
-│ Compose: Clean Base64                       │
-│ (remove line breaks and spaces)             │
-└──────────────────┬──────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────┐
-│ Compose: Decode Base64 to JSON string       │
-└──────────────────┬──────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────┐
-│ Parse JSON: Convert text to data fields     │
-└──────────────────┬──────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────┐
-│ Add row to Excel table in OneDrive          │
-└─────────────────────────────────────────────┘
++---------------------------------------------+
+| Trigger: New email arrives                  |
+| Subject contains "DCDA Advising Record:"    |
+| Has attachments: Yes                        |
++----------------------+----------------------+
+                       |
+                       v
++---------------------------------------------+
+| Apply to Each: For each attachment          |
+|   +---------------------------------------+ |
+|   | Create File: Save to OneDrive         | |
+|   | Folder: /DCDA_Advising_Records        | |
+|   | Filename: Attachment Name             | |
+|   +---------------------------------------+ |
++----------------------+----------------------+
+                       |
+                       v
++---------------------------------------------+
+| (Optional) Send notification email          |
++---------------------------------------------+
 ```
+
+## CSV File Format
+
+The saved CSV files contain one row with these columns:
+
+| Column | Description |
+|--------|-------------|
+| Timestamp | When the record was submitted |
+| Name | Student name |
+| DegreeType | major or minor |
+| ExpectedGraduation | e.g., "Spring 2027" |
+| ProgressHours | Hours completed toward degree |
+| TotalHours | Total hours required |
+| ProgressPercent | Percentage complete |
+| CompletedCourses | Semicolon-separated course codes |
+| ScheduledCourses | Semicolon-separated course codes |
+| SpecialCredits | Transfer credits, study abroad, etc. |
+| Notes | Student questions/notes |
+
+You can open these CSV files directly in Excel, or import them into a master spreadsheet.
+
+## Importing CSV to Excel
+
+To consolidate multiple CSV files into one Excel spreadsheet:
+
+1. Open Excel
+2. Go to **Data** > **Get Data** > **From File** > **From Folder**
+3. Select your `DCDA_Advising_Records` folder
+4. Click **Combine** > **Combine & Load**
+5. This creates a table that automatically updates when new files are added
 
 ## References
 
-- [Excel Online Business Connector](https://learn.microsoft.com/en-us/connectors/excelonlinebusiness/)
-- [Add Rows to Excel in Power Automate](https://www.spguides.com/add-rows-to-excel-in-power-automate/)
+- [OneDrive for Business Connector](https://learn.microsoft.com/en-us/connectors/onedriveforbusiness/)
+- [Apply to Each in Power Automate](https://learn.microsoft.com/en-us/power-automate/apply-to-each)

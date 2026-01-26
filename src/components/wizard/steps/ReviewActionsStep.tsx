@@ -10,7 +10,7 @@ import {
 import { Eye, Printer, Download, Calendar, Mail, Send } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
-import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
+import { generatePdfBlob, downloadPdf, printPdf, exportToCSV, downloadAdvisorCSV } from '@/services/export'
 
 interface ReviewActionsStepProps {
   studentData: StudentData
@@ -112,108 +112,40 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   const handleSubmitToAdvisor = () => {
     const date = new Date().toLocaleDateString()
     const degreeLabel = studentData.degreeType === 'major' ? 'Major' : 'Minor'
-    
-    const completedSection = Object.entries(completedByCategory).length > 0
-      ? Object.entries(completedByCategory)
-          .map(([category, codes]) => `  ${category}:\n    ${codes.join(', ')}`)
-          .join('\n')
-      : '  None'
-
-    const scheduledSection = Object.entries(scheduledByCategory).length > 0
-      ? Object.entries(scheduledByCategory)
-          .map(([category, codes]) => `  ${category}:\n    ${codes.join(', ')}`)
-          .join('\n')
-      : '  None'
-
-    const specialCreditsSection = studentData.specialCredits.length > 0
-      ? studentData.specialCredits
-          .map(c => `  • ${c.type.charAt(0).toUpperCase() + c.type.slice(1).replace('-', ' ')}: ${c.description}\n    Counts as: ${c.countsAs}`)
-          .join('\n')
-      : '  None'
-
-    const remainingSection = neededCategories.length > 0
-      ? neededCategories
-          .map(cat => `  • ${cat.name}: ${cat.remaining} course${cat.remaining > 1 ? 's' : ''} needed`)
-          .join('\n')
-      : '  All requirements satisfied!'
 
     const progressHours = selectedDegreeType === 'major' ? majorHours : minorHours
     const totalHours = selectedDegreeType === 'major' ? majorTotalHours : minorTotalHours
     const progressPercent = Math.round((progressHours / totalHours) * 100)
 
-    // Sanitize text fields for JSON - replace newlines and escape problematic chars
-    const sanitizeForJson = (text: string) => {
-      return text
-        .replace(/\r\n/g, ' | ')  // Windows newlines
-        .replace(/\n/g, ' | ')    // Unix newlines
-        .replace(/\r/g, ' | ')    // Old Mac newlines
-        .replace(/\t/g, ' ')      // Tabs
-        .trim()
-    }
+    // Download the CSV file first
+    const filename = downloadAdvisorCSV(studentData, { progressHours, totalHours, progressPercent })
 
-    const jsonData = {
-      version: '2.0',
-      timestamp: new Date().toISOString(),
-      name: sanitizeForJson(studentData.name),
-      degreeType: studentData.degreeType || '',
-      expectedGraduation: studentData.expectedGraduation || '',
-      progressHours,
-      totalHours,
-      progressPercent,
-      completedCourses: studentData.completedCourses.join('; '),
-      scheduledCourses: studentData.scheduledCourses.join('; '),
-      specialCredits: studentData.specialCredits.length > 0
-        ? studentData.specialCredits.map(c => `${c.type}: ${sanitizeForJson(c.description)} (${c.countsAs})`).join('; ')
-        : '',
-      notes: sanitizeForJson(studentData.notes || ''),
-    }
-
+    // Build a simple email body
     const subject = `DCDA Advising Record: ${studentData.name}`
-    const body = `═══════════════════════════════════════
-       DCDA ADVISING RECORD
+    const body = `DCDA Advising Record
 ═══════════════════════════════════════
 
-📋 STUDENT INFORMATION
-───────────────────────────────────────
-Name:                ${studentData.name}
-Degree Type:         DCDA ${degreeLabel}
+Name: ${studentData.name}
+Degree Type: DCDA ${degreeLabel}
 Expected Graduation: ${studentData.expectedGraduation || 'Not specified'}
-Date Submitted:      ${date}
+Date: ${date}
+Progress: ${progressHours}/${totalHours} hours (${progressPercent}%)
 
-📊 PROGRESS: ${progressHours}/${totalHours} hours (${progressPercent}%)
+───────────────────────────────────────
+IMPORTANT: Please attach the CSV file that was just downloaded:
+${filename}
 ───────────────────────────────────────
 
-✅ COMPLETED COURSES (by category)
-───────────────────────────────────────
-${completedSection}
-
-📅 SCHEDULED COURSES - Spring 2026
-───────────────────────────────────────
-${scheduledSection}
-
-📝 SPECIAL CREDITS
-───────────────────────────────────────
-${specialCreditsSection}
-
-⏳ REMAINING REQUIREMENTS
-───────────────────────────────────────
-${remainingSection}
-
-💬 NOTES/QUESTIONS
-───────────────────────────────────────
+Notes/Questions:
 ${studentData.notes || 'None'}
-
-───────────────────────────────────────
-         DATA (for automation)
-───────────────────────────────────────
-[DCDA_DATA_START]
-${btoa(JSON.stringify(jsonData)).match(/.{1,72}/g)?.join('\n') || btoa(JSON.stringify(jsonData))}
-[DCDA_DATA_END]
 
 Submitted via DCDA Advisor Mobile`
 
-    const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    window.open(mailtoUrl, '_blank')
+    // Small delay to ensure download starts before email opens
+    setTimeout(() => {
+      const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+      window.open(mailtoUrl, '_blank')
+    }, 500)
   }
 
   return (
