@@ -63,10 +63,25 @@ Click the trigger to expand it. Set these parameters:
 6. Paste this expression and click **OK**:
 
 ```
-substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),21),sub(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_END-->'),add(indexOf(triggerOutputs()?['body/body'],'<!--DCDA_JSON_START-->'),21)))
+substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_START]'),17),sub(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_END]'),add(indexOf(triggerOutputs()?['body/body'],'[DCDA_DATA_START]'),17)))
 ```
 
-## Step 5: Add Compose Action (Decode Base64)
+## Step 5: Add Compose Action (Clean Base64)
+
+1. Click **+ New step**
+2. Search for **Compose** (under Data Operations)
+3. Rename it to: `Clean Base64`
+4. Click in the **Inputs** field
+5. Click **Expression** tab
+6. Paste this expression and click **OK**:
+
+```
+replace(replace(replace(outputs('Extract_Base64'),decodeUriComponent('%0A'),''),decodeUriComponent('%0D'),''),' ','')
+```
+
+**Note**: This removes line breaks and spaces that email clients may insert into the Base64 string.
+
+## Step 6: Add Compose Action (Decode Base64)
 
 1. Click **+ New step**
 2. Search for **Compose** (under Data Operations)
@@ -76,12 +91,12 @@ substring(triggerOutputs()?['body/body'],add(indexOf(triggerOutputs()?['body/bod
 6. Paste this expression and click **OK**:
 
 ```
-base64ToString(outputs('Extract_Base64'))
+base64ToString(outputs('Clean_Base64'))
 ```
 
-**Note**: The JSON data is base64-encoded to prevent formatting issues with email HTML encoding.
+**Note**: The JSON data is base64-encoded and split across multiple lines to prevent email client formatting issues.
 
-## Step 6: Add Parse JSON Action
+## Step 7: Add Parse JSON Action
 
 1. Click **+ New step**
 2. Search for **Parse JSON** (under Data Operations)
@@ -94,7 +109,7 @@ base64ToString(outputs('Extract_Base64'))
 {"version":"2.0","timestamp":"2026-01-24T12:00:00.000Z","name":"John Smith","degreeType":"major","expectedGraduation":"Spring 2027","progressHours":15,"totalHours":30,"progressPercent":50,"completedCourses":"DCDA 1000; DCDA 2000","scheduledCourses":"DCDA 3000","specialCredits":"","notes":"Sample notes"}
 ```
 
-## Step 7: Add Excel Action (Add Row)
+## Step 8: Add Excel Action (Add Row)
 
 1. Click **+ New step**
 2. Search for **Add a row into a table** (Excel Online Business)
@@ -125,7 +140,7 @@ base64ToString(outputs('Extract_Base64'))
    | ScheduledCourses | scheduledCourses |
    | Notes | notes |
 
-## Step 8: Save and Test
+## Step 9: Save and Test
 
 1. Click **Save** (top right)
 2. Use the DCDA Advisor app to submit a test record
@@ -149,8 +164,9 @@ base64ToString(outputs('Extract_Base64'))
 - Wait a few minutes - there can be a delay
 
 ### JSON parsing fails
-- Check the Compose step output in flow run history
-- The email must contain `<!--DCDA_JSON_START-->` and `<!--DCDA_JSON_END-->` markers
+- Check the Compose step outputs in flow run history
+- The email must contain `[DCDA_DATA_START]` and `[DCDA_DATA_END]` markers
+- Verify the "Clean Base64" step is removing all line breaks and spaces
 - Make sure you're using the updated version of the app
 
 ### Excel row not added
@@ -168,7 +184,12 @@ base64ToString(outputs('Extract_Base64'))
                    ▼
 ┌─────────────────────────────────────────────┐
 │ Compose: Extract Base64 from email body     │
-│ (text between the JSON markers)             │
+│ (text between [DCDA_DATA_START/END] markers)│
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│ Compose: Clean Base64                       │
+│ (remove line breaks and spaces)             │
 └──────────────────┬──────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────┐
