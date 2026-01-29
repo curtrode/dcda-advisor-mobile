@@ -5,7 +5,7 @@ const STORAGE_KEY = 'dcda-mobile-student-data'
 
 const defaultStudentData: StudentData = {
   name: '',
-  degreeType: 'major', // Default to major for mobile wizard
+  degreeType: null,
   expectedGraduation: null,
   completedCourses: [],
   scheduledCourses: [],
