@@ -154,7 +154,7 @@ Advising plan CSV attached.
 Submitted via DCDA Advisor Mobile`
 
     const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    window.open(mailtoUrl, '_blank')
+    window.location.href = mailtoUrl
   }
 
   return (

@@ -48,7 +48,7 @@ export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNe
           <Button
             type="button"
             variant={degreeType === 'major' ? 'default' : 'outline'}
-            className={`h-24 flex-col gap-2 ${degreeType === 'major' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+            className={`h-24 flex-col gap-2 ${degreeType === 'major' ? 'bg-primary/80 hover:bg-primary/90 ring-2 ring-primary/50 ring-offset-2' : ''}`}
             onClick={() => onDegreeTypeChange('major')}
           >
             <img src={`${BASE_URL}major_icon.png`} alt="" className="h-10 w-10" />
@@ -57,7 +57,7 @@ export function NameStep({ value, degreeType, onChange, onDegreeTypeChange, onNe
           <Button
             type="button"
             variant={degreeType === 'minor' ? 'default' : 'outline'}
-            className={`h-24 flex-col gap-2 ${degreeType === 'minor' ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+            className={`h-24 flex-col gap-2 ${degreeType === 'minor' ? 'bg-primary/80 hover:bg-primary/90 ring-2 ring-primary/50 ring-offset-2' : ''}`}
             onClick={() => onDegreeTypeChange('minor')}
           >
             <img src={`${BASE_URL}minor.png`} alt="" className="h-10 w-10" />
