@@ -346,8 +346,19 @@ function App() {
       setUnmetCategories(unmet)
     }
 
+    // Persist scheduled courses when moving through Part 2 or to review
+    if (currentStep.part === 'schedule' || currentStep.id === 'transition') {
+      const scheduledCourses = [
+        ...Object.entries(scheduledSelections)
+          .filter(([key, value]) => key !== 'generalElectives' && value !== null)
+          .map(([, value]) => value as string),
+        ...scheduledSelections.generalElectives,
+      ]
+      updateStudentData({ scheduledCourses })
+    }
+
     goNext()
-  }, [wizard, allCompletedCourses, updateStudentData, notYetSelections, studentData.degreeType, calculateUnmetCategories])
+  }, [wizard, allCompletedCourses, updateStudentData, notYetSelections, studentData.degreeType, calculateUnmetCategories, scheduledSelections])
 
   // Handle start over
   const handleStartOver = useCallback(() => {
@@ -459,6 +470,51 @@ function App() {
 
     setCategorySelections(newSelections)
     setNotYetSelections(newNotYet)
+
+    // Initialize scheduled selections from imported data
+    const newScheduledSelections: ScheduledSelections = {
+      intro: null,
+      statistics: null,
+      coding: null,
+      mmAuthoring: null,
+      capstone: null,
+      dcElective: null,
+      daElective: null,
+      generalElectives: [],
+    }
+
+    if (data.scheduledCourses && data.scheduledCourses.length > 0) {
+      const introCourses = getRequiredCategoryCourses('intro', degreeType)
+      const statsCourses = getRequiredCategoryCourses('statistics', degreeType)
+      const codingCourses = getRequiredCategoryCourses('coding', degreeType)
+      const mmCourses = getRequiredCategoryCourses('mmAuthoring', degreeType)
+      const dcCourses = getRequiredCategoryCourses('dcElective', degreeType)
+      const daCourses = getRequiredCategoryCourses('daElective', degreeType)
+      const capstoneCourses = getRequiredCategoryCourses('capstone', degreeType)
+
+      for (const code of data.scheduledCourses) {
+        if (introCourses.includes(code) && !newScheduledSelections.intro) {
+          newScheduledSelections.intro = code
+        } else if (statsCourses.includes(code) && !newScheduledSelections.statistics) {
+          newScheduledSelections.statistics = code
+        } else if (codingCourses.includes(code) && !newScheduledSelections.coding) {
+          newScheduledSelections.coding = code
+        } else if (mmCourses.includes(code) && !newScheduledSelections.mmAuthoring) {
+          newScheduledSelections.mmAuthoring = code
+        } else if (capstoneCourses.includes(code) && !newScheduledSelections.capstone) {
+          newScheduledSelections.capstone = code
+        } else if (dcCourses.includes(code) && !newScheduledSelections.dcElective) {
+          newScheduledSelections.dcElective = code
+        } else if (daCourses.includes(code) && !newScheduledSelections.daElective) {
+          newScheduledSelections.daElective = code
+        } else {
+          // Treat as general elective
+          newScheduledSelections.generalElectives.push(code)
+        }
+      }
+    }
+
+    setScheduledSelections(newScheduledSelections)
 
     // Calculate Unmet Categories immediately
     const unmet = calculateUnmetCategories(degreeType, newNotYet)

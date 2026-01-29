@@ -382,7 +382,7 @@ export function generatePdfBlob({ studentData, generalElectives }: ExportOptions
   doc.setFont('helvetica', 'bold')
   doc.text('Requirement', startX + 2, y + 1)
   doc.text('Completed / Credits', startX + colWidths.requirement + 2, y + 1)
-  doc.text('Spring 2026 / Future', startX + colWidths.requirement + colWidths.completed + 2, y + 1)
+  doc.text(`${getNextSemesterTerm()} / Future`, startX + colWidths.requirement + colWidths.completed + 2, y + 1)
   
   y += 8
 

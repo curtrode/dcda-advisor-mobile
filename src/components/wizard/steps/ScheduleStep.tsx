@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,13 @@ export function ScheduleStep({
     ? [...allSelectedCourses, ...allScheduledCourses.filter((c) => !selectedCourses.includes(c))]
     : [...allSelectedCourses, ...allScheduledCourses.filter((c) => c !== selectedCourse)]
   const availableCourses = getOfferedCoursesForCategory(categoryId, degreeType, excludeCourses, completedRequiredCourses)
+
+  // Auto-skip when no courses are available
+  useEffect(() => {
+    if (availableCourses.length === 0 && !isSkipped) {
+      onSkip()
+    }
+  }, [availableCourses.length, isSkipped, onSkip])
 
   const categoryName = categoryNames[categoryId]
 
@@ -119,13 +127,23 @@ export function ScheduleStep({
             </button>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
+          <div className="text-center py-8 space-y-4">
+            <p className="text-muted-foreground">
               No courses for this category are offered in {getNextSemesterTerm()}.
             </p>
             <p className="text-sm text-muted-foreground">
-              You'll need to take this requirement in a future semester.
+              This category has been automatically skipped. You can plan for a future semester.
             </p>
+            {/* Fallback Skip button in case auto-skip hasn't fired */}
+            {!isSkipped && (
+              <button
+                type="button"
+                onClick={onSkip}
+                className="px-4 py-2 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-all"
+              >
+                <span className="text-sm font-medium">Skip for now</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -205,13 +223,23 @@ export function ScheduleStep({
           </label>
         </RadioGroup>
       ) : (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground mb-4">
+        <div className="text-center py-8 space-y-4">
+          <p className="text-muted-foreground">
             No courses for this category are offered in {getNextSemesterTerm()}.
           </p>
           <p className="text-sm text-muted-foreground">
-            You'll need to take this requirement in a future semester.
+            This category has been automatically skipped. You can plan for a future semester.
           </p>
+          {/* Fallback Skip button in case auto-skip hasn't fired */}
+          {!isSkipped && (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="px-4 py-2 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-all"
+            >
+              <span className="text-sm font-medium">Skip for now</span>
+            </button>
+          )}
         </div>
       )}
     </div>

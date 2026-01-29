@@ -140,7 +140,7 @@ export function useRequirements(
 
     let generalCompleted: string[]
 
-    if (explicitGeneralElectives) {
+    if (explicitGeneralElectives && explicitGeneralElectives.length > 0) {
       // Use explicitly provided general electives list (from Part 1 selections)
       generalCompleted = [
         ...explicitGeneralElectives,
@@ -148,7 +148,7 @@ export function useRequirements(
         ...electiveOverflow,
       ]
     } else {
-      // Fallback: infer general electives (for cases where explicit list not provided)
+      // Fallback: infer general electives (for cases where explicit list not provided or empty)
       const electiveCategoryCourses = degree.electives?.categories.flatMap((cat) =>
         courses.filter((c) => c.category === cat.category && !requiredCategoryCourses.includes(c.code)).map((c) => c.code)
       ) ?? []

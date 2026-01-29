@@ -160,4 +160,45 @@ describe('useRequirements hook', () => {
       expect(generalCategory?.required).toBe(3) // Minor needs 3, major needs 4
     })
   })
+
+  describe('generalElectives handling', () => {
+    it('uses fallback inference when explicitGeneralElectives is undefined', () => {
+      const studentData = createStudentData({
+        completedCourses: ['ENGL 20813', 'MATH 10043', 'COSC 10603', 'WRIT 40163'],
+      })
+      // Pass undefined for generalElectives
+      const { result } = renderHook(() => useRequirements(studentData, undefined))
+      
+      const generalCategory = result.current.degreeProgress?.categories.find(c => c.id === 'generalElectives')
+      expect(generalCategory).toBeDefined()
+      // Should use fallback inference logic - general electives completed count should be 0
+      // since all courses are assigned to required categories
+      expect(generalCategory?.completed).toBe(0)
+    })
+
+    it('uses fallback inference when explicitGeneralElectives is empty array', () => {
+      const studentData = createStudentData({
+        completedCourses: ['ENGL 20813', 'MATH 10043', 'COSC 10603', 'WRIT 40163'],
+      })
+      // Pass empty array - should trigger fallback, not treat as "0 explicit electives"
+      const { result } = renderHook(() => useRequirements(studentData, []))
+      
+      const generalCategory = result.current.degreeProgress?.categories.find(c => c.id === 'generalElectives')
+      expect(generalCategory).toBeDefined()
+      // Empty array should be treated same as undefined (fallback inference)
+      expect(generalCategory?.completed).toBe(0)
+    })
+
+    it('uses explicit list when explicitGeneralElectives has entries', () => {
+      const studentData = createStudentData({
+        completedCourses: ['ENGL 20813', 'MATH 10043', 'COSC 10603', 'WRIT 40163', 'FILM 10103'],
+      })
+      // Pass explicit general electives
+      const { result } = renderHook(() => useRequirements(studentData, ['FILM 10103']))
+      
+      const generalCategory = result.current.degreeProgress?.categories.find(c => c.id === 'generalElectives')
+      expect(generalCategory?.completedCourses).toContain('FILM 10103')
+      expect(generalCategory?.completed).toBe(1)
+    })
+  })
 })

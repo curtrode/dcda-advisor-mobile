@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -87,11 +87,25 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
     }
   }
 
-  const handlePreview = () => {
+  // Cleanup blob URL to prevent memory leaks
+  const revokePreviewUrl = useCallback(() => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  const handlePreview = useCallback(() => {
+    // Revoke previous URL before creating new one
+    revokePreviewUrl()
     const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
     setPreviewUrl(blobUrl)
     setPreviewFilename(filename)
-  }
+  }, [studentData, generalElectives, revokePreviewUrl])
+
+  const handleClosePreview = useCallback(() => {
+    revokePreviewUrl()
+    setPreviewUrl(null)
+  }, [revokePreviewUrl])
 
   const handlePrint = () => {
     const { blobUrl } = generatePdfBlob({ studentData, generalElectives })
@@ -166,53 +180,48 @@ Submitted via DCDA Advisor Mobile`
         />
       </div>
 
-      {/* Export Buttons */}
-      <div className="space-y-3 pt-4">
+      {/* Export Buttons - 2x2 Grid */}
+      <div className="grid grid-cols-2 gap-3 pt-4">
         <Button
           variant="outline"
-          className="w-full justify-start gap-3"
+          className="flex-col h-auto py-4 gap-2"
           onClick={handlePreview}
         >
           <Eye className="size-5" />
-          Preview PDF
+          <span className="text-sm">Preview PDF</span>
         </Button>
 
         <Button
           variant="outline"
-          className="w-full justify-start gap-3"
+          className="flex-col h-auto py-4 gap-2"
           onClick={handlePrint}
         >
           <Printer className="size-5" />
-          Print PDF
+          <span className="text-sm">Print PDF</span>
         </Button>
 
         <Button
           variant="outline"
-          className="w-full justify-start gap-3"
+          className="flex-col h-auto py-4 gap-2"
           onClick={handleDownload}
         >
           <Download className="size-5" />
-          Save CSV
+          <span className="text-sm">Save CSV</span>
         </Button>
 
-        {/* Submit to Advisor */}
-        <div className="pt-3 border-t space-y-2">
-          <div className="text-xs text-muted-foreground px-1">
-            <strong>Optional:</strong> Submit your advising record for program records
-          </div>
-          <Button
-            variant="default"
-            className="w-full justify-center gap-3"
-            onClick={handleSubmitToAdvisor}
-          >
-            <Send className="size-5" />
-            Submit to Advisor
-          </Button>
-          <p className="text-[10px] text-muted-foreground px-1">
-            Opens an email with your advising data. You may also bring a printed copy to your advising appointment.
-          </p>
-        </div>
+        <Button
+          variant="default"
+          className="flex-col h-auto py-4 gap-2"
+          onClick={handleSubmitToAdvisor}
+        >
+          <Send className="size-5" />
+          <span className="text-sm">Submit</span>
+        </Button>
       </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        Submit sends your advising record via email. You may also bring a printed copy to your appointment.
+      </p>
 
       {/* Make Appointment */}
       <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
@@ -243,7 +252,7 @@ Submitted via DCDA Advisor Mobile`
       </div>
 
       {/* PDF Preview Dialog */}
-      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
+      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && handleClosePreview()}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-4 pb-0">
             <DialogTitle>PDF Preview</DialogTitle>

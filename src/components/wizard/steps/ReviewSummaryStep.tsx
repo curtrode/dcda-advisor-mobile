@@ -1,6 +1,6 @@
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
-import { getCourseByCode, buildSemesterPlan } from '@/services/courses'
+import { getCourseByCode, buildSemesterPlan, getNextSemesterTerm } from '@/services/courses'
 import { cn } from '@/lib/utils'
 import { CalendarDays } from 'lucide-react'
 
@@ -250,7 +250,7 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
         )}
 
         {scheduledCount > 0 && (
-          <SummarySection title="Scheduled: Spring 2026" status="scheduled" count={scheduledCount}>
+          <SummarySection title={`Scheduled: ${getNextSemesterTerm()}`} status="scheduled" count={scheduledCount}>
             {Object.entries(scheduledByCategory).map(([category, codes]) =>
               codes.map((code) => (
                 <CourseRow key={code} code={code} category={category} />
