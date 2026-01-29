@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import type { StudentData, Course, SpecialCredit, RequirementCategoryId, FlexibleCourseCategory } from '@/types'
 import { FLEXIBLE_COURSES } from '@/types'
-import { getCapstoneTargetSemester, buildSemesterPlan } from './courses'
+import { getCapstoneTargetSemester, buildSemesterPlan, getNextSemesterTerm } from './courses'
 import coursesData from '../../data/courses.json'
 import requirementsData from '../../data/requirements.json'
 
