@@ -106,19 +106,19 @@
       "code": "GEOL 20113",
       "section": "015\nREG",
       "title": "NSC",
-      "schedule": "In Person",
-      "modality": "01/12/26",
-      "enrollment": "Open",
-      "status": "TR\n9:30-10:20"
+      "schedule": "TR\n9:30-10:20",
+      "modality": "In Person",
+      "enrollment": "01/12/26",
+      "status": "Open"
     },
     {
       "code": "GEOL 20113",
       "section": "115\nREG",
       "title": "NSC",
-      "schedule": "In Person",
-      "modality": "01/12/26",
-      "enrollment": "Open",
-      "status": "W\n11:00-12:50"
+      "schedule": "W\n11:00-12:50",
+      "modality": "In Person",
+      "enrollment": "01/12/26",
+      "status": "Open"
     },
     {
       "code": "HIST 30673",
@@ -133,10 +133,10 @@
       "code": "HIST 30693",
       "section": "035\nREG",
       "title": "HT",
-      "schedule": "In Person",
-      "modality": "01/12/26",
-      "enrollment": "Open",
-      "status": "TR\n11:00-12:20"
+      "schedule": "TR\n11:00-12:20",
+      "modality": "In Person",
+      "enrollment": "01/12/26",
+      "status": "Open"
     },
     {
       "code": "INSC 20153",
@@ -178,19 +178,19 @@
       "code": "MATH 10043",
       "section": "081\nREG",
       "title": "MTH",
-      "schedule": "In Person",
-      "modality": "01/12/26",
-      "enrollment": "Open",
-      "status": "MW\n19:00-20:20"
+      "schedule": "MW\n19:00-20:20",
+      "modality": "In Person",
+      "enrollment": "01/12/26",
+      "status": "Open"
     },
     {
       "code": "MATH 10043",
       "section": "084\nREG",
       "title": "MTH",
-      "schedule": "In Person",
-      "modality": "01/12/26",
-      "enrollment": "Open",
-      "status": "TR\n18:30-19:50"
+      "schedule": "TR\n18:30-19:50",
+      "modality": "In Person",
+      "enrollment": "01/12/26",
+      "status": "Open"
     },
     {
       "code": "STCO 43803",

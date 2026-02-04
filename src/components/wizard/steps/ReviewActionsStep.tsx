@@ -22,6 +22,7 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
   const selectedDegreeType = studentData.degreeType || 'major'
   const majorTotalHours = requirements.major.totalHours
@@ -109,8 +110,7 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
 
   const handlePrint = () => {
     const { blobUrl } = generatePdfBlob({ studentData, generalElectives })
-    printPdf(blobUrl)
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+    printPdf(blobUrl, () => URL.revokeObjectURL(blobUrl))
   }
 
   const handleDownload = () => {
@@ -191,14 +191,16 @@ Submitted via DCDA Advisor Mobile`
           <span className="text-sm">Preview PDF</span>
         </Button>
 
-        <Button
-          variant="outline"
-          className="flex-col h-auto py-4 gap-2"
-          onClick={handlePrint}
-        >
-          <Printer className="size-5" />
-          <span className="text-sm">Print PDF</span>
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="outline"
+            className="flex-col h-auto py-4 gap-2"
+            onClick={handlePrint}
+          >
+            <Printer className="size-5" />
+            <span className="text-sm">Print PDF</span>
+          </Button>
+        )}
 
         <Button
           variant="outline"

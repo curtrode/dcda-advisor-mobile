@@ -762,11 +762,30 @@ export function downloadPdf(blobUrl: string, filename: string): void {
 }
 
 // Print PDF
-export function printPdf(blobUrl: string): void {
+export function printPdf(blobUrl: string, onCleanup?: () => void): boolean {
   const printWindow = window.open(blobUrl, '_blank')
-  if (printWindow) {
-    printWindow.addEventListener('load', () => {
-      printWindow.print()
-    })
+  if (!printWindow) {
+    onCleanup?.()
+    return false
   }
+
+  let cleaned = false
+  const cleanup = () => {
+    if (cleaned) return
+    cleaned = true
+    onCleanup?.()
+  }
+
+  printWindow.addEventListener('load', () => {
+    printWindow.print()
+  })
+
+  // Revoke the blob URL after the print dialog closes or the window exits.
+  printWindow.addEventListener('afterprint', () => {
+    cleanup()
+    printWindow.close()
+  })
+  printWindow.addEventListener('beforeunload', cleanup)
+
+  return true
 }
