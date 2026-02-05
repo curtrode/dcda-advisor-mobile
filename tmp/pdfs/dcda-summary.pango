@@ -1,0 +1,27 @@
+<span font_desc="Helvetica 18" weight="bold">DCDA Advisor Mobile - App Summary</span>
+
+<span font_desc="Helvetica 12" weight="bold">What it is</span>
+<span font_desc="Helvetica 10.5">A mobile-first degree planning app for Digital Culture &amp; Data Analytics (DCDA) students at TCU. It provides an interactive wizard to audit completed coursework and plan future semesters toward graduation.</span>
+
+<span font_desc="Helvetica 12" weight="bold">Who it's for</span>
+<span font_desc="Helvetica 10.5">Primary users are DCDA major or minor students at TCU planning their degree requirements.</span>
+
+<span font_desc="Helvetica 12" weight="bold">What it does</span>
+<span font_desc="Helvetica 10.5">- Guides users through History (completed courses), Planning (future scheduling), and Review phases.
+- Enforces degree logic: major vs minor credit totals, core vs elective categorization, mutually exclusive courses.
+- Maps transfer or special credits into general electives.
+- Generates semester plans through graduation, supports optional summer terms, and schedules the capstone in the final spring.
+- Presents a review dashboard with progress bars, completed lists, and a semester plan.
+- Uses JSON course catalog and semester offerings data; stores user progress locally in browser storage.</span>
+
+<span font_desc="Helvetica 12" weight="bold">How it works</span>
+<span font_desc="Helvetica 10.5">- UI built from wizard steps and reusable UI components in `src/components/`.
+- Data sources in `src/data/` (courses, requirements, semester offerings).
+- State and requirement logic in hooks: `useStudentData` and `useRequirements`.
+- Course filtering and scheduling helpers in `src/services/courses.ts`.
+- Flow: user inputs -> hooks update state -> requirements engine computes unmet categories -> planning steps schedule courses -> review summarizes progress.</span>
+
+<span font_desc="Helvetica 12" weight="bold">How to run</span>
+<span font_desc="Helvetica 10.5">- Prereq: Node.js 18+.
+- Install dependencies: `npm install`.
+- Start dev server: `npm run dev`.</span>
