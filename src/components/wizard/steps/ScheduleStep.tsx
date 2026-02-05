@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import type { RequirementCategoryId } from '@/types'
-import { getOfferedCoursesForCategory, categoryNames, getEnrollmentWarning, getSectionsForCourse, getNextSemesterTerm } from '@/services/courses'
+import { getOfferedCoursesForCategory, categoryNames, getEnrollmentWarning, getNextSemesterTerm } from '@/services/courses'
 import { AlertTriangle } from 'lucide-react'
 
 interface ScheduleStepProps {
@@ -68,8 +68,6 @@ export function ScheduleStep({
           <div className="space-y-3">
             {availableCourses.map((course) => {
               const warning = getEnrollmentWarning(course.code)
-              const sections = getSectionsForCourse(course.code)
-              const sectionInfo = sections.length > 0 ? sections[0] : null
               const isSelected = selectedCourses.includes(course.code)
 
               return (
@@ -96,11 +94,6 @@ export function ScheduleStep({
                   <div className="flex-1">
                     <div className="font-semibold">{course.code}</div>
                     <div className="text-sm text-muted-foreground">{course.title}</div>
-                    {sectionInfo && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {sectionInfo.schedule} • {sectionInfo.modality}
-                      </div>
-                    )}
                     {warning && (
                       <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
                         <AlertTriangle className="size-3.5" />
@@ -176,8 +169,6 @@ export function ScheduleStep({
         >
           {availableCourses.map((course) => {
             const warning = getEnrollmentWarning(course.code)
-            const sections = getSectionsForCourse(course.code)
-            const sectionInfo = sections.length > 0 ? sections[0] : null
 
             return (
               <label
@@ -193,11 +184,6 @@ export function ScheduleStep({
                 <div className="flex-1">
                   <div className="font-semibold">{course.code}</div>
                   <div className="text-sm text-muted-foreground">{course.title}</div>
-                  {sectionInfo && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {sectionInfo.schedule} • {sectionInfo.modality}
-                    </div>
-                  )}
                   {warning && (
                     <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
                       <AlertTriangle className="size-3.5" />
