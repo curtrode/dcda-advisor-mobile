@@ -1,0 +1,32 @@
+{
+  "major": [
+    "TODO: Add career options for DCDA majors",
+    "Data Analyst",
+    "UX Researcher",
+    "Digital Content Strategist",
+    "Social Media Analyst",
+    "Web Developer",
+    "Multimedia Producer",
+    "Digital Marketing Analyst",
+    "Information Architect",
+    "GIS Analyst",
+    "Technical Writer",
+    "Digital Project Manager",
+    "Data Visualization Specialist"
+  ],
+  "minor": [
+    "TODO: Add career options for DCDA minors (or confirm shared with major)",
+    "Data Analyst",
+    "UX Researcher",
+    "Digital Content Strategist",
+    "Social Media Analyst",
+    "Web Developer",
+    "Multimedia Producer",
+    "Digital Marketing Analyst",
+    "Information Architect",
+    "GIS Analyst",
+    "Technical Writer",
+    "Digital Project Manager",
+    "Data Visualization Specialist"
+  ]
+}
