@@ -53,8 +53,8 @@ npm run preview  # Preview production build
 ```
 
 ## Deployment
-- **GitHub Pages**: Deployed to `https://<org>.github.io/dcda-advisor-mobile/`
-- Base path configured in [vite.config.ts](../vite.config.ts) as `/dcda-advisor-mobile/`
+- **GitHub Pages**: Deployed to `https://<org>.github.io/dcda-advising-wizard/`
+- Base path configured in [vite.config.ts](../vite.config.ts) as `/dcda-advising-wizard/`
 - **Firebase Hosting**: Alternative deployment configured in [firebase.json](../firebase.json) (SPA rewrites enabled)
 
 ## Testing
