@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0",
   "department": "Digital Culture and Data Analytics",
-  "lastUpdated": "2026-02-15T15:11:38.168Z",
+  "lastUpdated": "2026-02-15T21:17:00.703Z",
   "wizardUrl": "https://dcda-advisor-mobile.web.app",
   "programs": [
     {
@@ -15,7 +15,6 @@
         "The Digital Culture and Data Analytics (DCDA) program prepares students to engage critically and creatively with digital technologies and data. Students choose from courses across multiple colleges spanning digital culture, data analytics, and multimedia authoring."
       ],
       "careerOptions": [
-        "TODO: Add career options for DCDA majors",
         "Data Analyst",
         "UX Researcher",
         "Digital Content Strategist",
@@ -1538,7 +1537,6 @@
         "The Digital Culture and Data Analytics (DCDA) program prepares students to engage critically and creatively with digital technologies and data. Students choose from courses across multiple colleges spanning digital culture, data analytics, and multimedia authoring."
       ],
       "careerOptions": [
-        "TODO: Add career options for DCDA minors (or confirm shared with major)",
         "Data Analyst",
         "UX Researcher",
         "Digital Content Strategist",
