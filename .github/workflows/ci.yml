@@ -26,6 +26,9 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Check schema version
+        run: npm run check-schema
+
       - name: Build
         run: npm run build
 
