@@ -53,9 +53,9 @@ npm run preview  # Preview production build
 ```
 
 ## Deployment
-- **GitHub Pages**: Deployed to `https://<org>.github.io/dcda-advising-wizard/`
-- Base path configured in [vite.config.ts](../vite.config.ts) as `/dcda-advising-wizard/`
-- **Firebase Hosting**: Alternative deployment configured in [firebase.json](../firebase.json) (SPA rewrites enabled)
+- **Firebase Hosting** (primary): Deployed to `https://dcda-advisor-mobile.web.app`
+  - SPA rewrites enabled in [firebase.json](../firebase.json)
+  - Deploy: `npm run build && firebase deploy --only hosting`
 
 ## Testing
 **Vitest + React Testing Library** configured with jsdom environment.
@@ -69,9 +69,11 @@ npm run test:coverage # Coverage report
 **Test files**: `*.test.ts` or `*.test.tsx` alongside source files  
 **Setup**: [test/setup.ts](../src/test/setup.ts) includes jest-dom matchers
 
-**Current coverage**:
+**Current coverage** (41 tests across 4 files):
 - [courses.test.ts](../src/services/courses.test.ts) - Course service functions (14 tests)
-- [useRequirements.test.ts](../src/hooks/useRequirements.test.ts) - Degree progress calculation (12 tests)
+- [useRequirements.test.ts](../src/hooks/useRequirements.test.ts) - Degree progress calculation (15 tests)
+- [export.test.ts](../src/services/export.test.ts) - CSV export/import (7 tests)
+- [ScheduleStep.test.tsx](../src/components/wizard/steps/ScheduleStep.test.tsx) - Schedule step rendering (5 tests)
 
 ## Critical Patterns
 

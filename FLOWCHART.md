@@ -12,7 +12,7 @@ flowchart TD
         D --> E
     end
 
-    subgraph PHASE1["📋 PHASE 1: Record Completed Courses"]
+    subgraph PHASE1["📋 History: Record Completed Courses"]
         E --> F{CSV File<br/>Imported?}
         F -->|Yes| G[Parse CSV &<br/>Populate Selections]
         F -->|No| H[Name & Degree Type]
@@ -82,7 +82,7 @@ flowchart TD
         AN --> AO[Begin Part 2<br/>Scheduling]
     end
 
-    subgraph PHASE2["📅 PHASE 2: Schedule Remaining"]
+    subgraph PHASE2["📅 Schedule: Plan Remaining Courses"]
         AO --> AP{Next Unmet<br/>Category?}
 
         AP -->|Intro| AQ[Schedule Intro<br/>Course]
@@ -111,7 +111,7 @@ flowchart TD
         AX --> REV
     end
 
-    subgraph REVIEW["✅ PHASE 3: Review & Export"]
+    subgraph REVIEW["✅ Review & Submit"]
         REV[Review Summary]
         REV --> BB[Build Semester<br/>Distribution Plan]
         BB --> BC[Display Progress<br/>Bars & Summary]
@@ -300,9 +300,9 @@ flowchart LR
 
 | Symbol | Meaning |
 |--------|---------|
-| 📋 | Phase 1 - Recording completed courses |
-| 📅 | Phase 2 - Scheduling remaining requirements |
-| ✅ | Review & completion |
+| 📋 | History - Recording completed courses |
+| 📅 | Schedule - Planning remaining requirements |
+| ✅ | Review & Submit |
 | ✓ | Required for degree |
 | ❌ | Blocked/unavailable |
 | ⚠️ | Warning/caution |

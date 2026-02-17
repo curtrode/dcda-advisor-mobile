@@ -1,17 +1,17 @@
-# DCDA Advisor Mobile
+# Ada — DCDA Advising Wizard
+
+**Live Site:** https://dcda-advisor-mobile.web.app
 
 A mobile-first degree planning application for **Digital Culture & Data Analytics (DCDA)** students at TCU. This tool acts as an interactive wizard to help students audit their completed coursework and plan their future semesters leading up to graduation.
 
 ## Overview
 
-The DCDA Advisor helps students navigate the complex requirements of the DCDA Major and Minor. It splits the advising process into two distinct phases:
+The DCDA Advisor helps students navigate the complex requirements of the DCDA Major and Minor. It guides students through four phases:
 
-1.  **History (Part 1):** Users record what they have already completed. The app enforces logic such as:
-    *   Mutually exclusive courses (e.g., MATH 10043 vs INSC 20153).
-    *   Core vs. Elective categorization.
-    *   Transfer/Special credits (automatically mapped to General Electives for simplicity).
-2.  **Planning (Part 2):** Based on the "Unmet" categories calculated from history, the app prompts the user to schedule specific courses for the upcoming semester.
-3.  **Review:** A comprehensive dashboard showing progress bars, completed lists, and a generated Semester Plan through graduation.
+1.  **History:** Record completed coursework, with enforcement of mutually exclusive courses (e.g., MATH 10043 vs INSC 20153), core vs. elective categorization, and transfer/special credits.
+2.  **Schedule:** Based on unmet categories, schedule specific courses for the upcoming semester.
+3.  **Review:** Progress dashboard with percentage completion, course lists, and a generated semester plan through graduation.
+4.  **Submit:** Save/export via PDF, CSV, or email submission to advisor.
 
 ## Key Features
 
