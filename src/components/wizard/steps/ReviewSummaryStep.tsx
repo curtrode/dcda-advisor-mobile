@@ -2,73 +2,54 @@ import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
 import { getCourseByCode, buildSemesterPlan, getNextSemesterTerm } from '@/services/courses'
 import { cn } from '@/lib/utils'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, Check } from 'lucide-react'
 
-// Dual Progress Bar Component
-interface DualProgressProps {
-  majorHours: number
-  majorTotal: number
-  minorHours: number
-  minorTotal: number
-  selectedDegree: 'major' | 'minor'
+// Hero Progress Component — large percentage with bar
+interface ProgressHeroProps {
+  hours: number
+  totalHours: number
+  degreeLabel: string
+  altHours?: number
+  altTotalHours?: number
+  altDegreeLabel?: string
+  showAltInsight?: boolean
 }
 
-function DualProgressBars({ majorHours, majorTotal, minorHours, minorTotal, selectedDegree }: DualProgressProps) {
-  const majorPercent = Math.min(100, Math.round((majorHours / majorTotal) * 100))
-  const minorPercent = Math.min(100, Math.round((minorHours / minorTotal) * 100))
+function ProgressHero({ hours, totalHours, degreeLabel, altHours, altTotalHours, altDegreeLabel, showAltInsight }: ProgressHeroProps) {
+  const percent = Math.min(100, Math.round((hours / totalHours) * 100))
+  const altPercent = altHours && altTotalHours ? Math.min(100, Math.round((altHours / altTotalHours) * 100)) : 0
   
   return (
-    <div className="bg-card border rounded-xl p-4 space-y-3">
-      <div className="text-sm font-medium text-muted-foreground">Progress Comparison</div>
-      
-      {/* Major Progress */}
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span className={cn("font-medium", selectedDegree === 'major' ? 'text-primary' : 'text-muted-foreground')}>
-            Major {selectedDegree === 'major' && '(selected)'}
-          </span>
-          <span className="text-muted-foreground">{majorHours}/{majorTotal} hrs ({majorPercent}%)</span>
+    <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-5 text-primary-foreground">
+      <div className="flex items-center gap-4">
+        <div className="text-5xl font-extrabold leading-none tabular-nums">
+          {percent}<span className="text-2xl font-semibold">%</span>
         </div>
-        <div className="h-3 bg-muted rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full rounded-full transition-all",
-              selectedDegree === 'major' ? 'bg-primary' : 'bg-muted-foreground/40'
-            )}
-            style={{ width: `${majorPercent}%` }}
-          />
-        </div>
-      </div>
-      
-      {/* Minor Progress */}
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span className={cn("font-medium", selectedDegree === 'minor' ? 'text-primary' : 'text-muted-foreground')}>
-            Minor {selectedDegree === 'minor' && '(selected)'}
-          </span>
-          <span className="text-muted-foreground">{minorHours}/{minorTotal} hrs ({minorPercent}%)</span>
-        </div>
-        <div className="h-3 bg-muted rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full rounded-full transition-all",
-              selectedDegree === 'minor' ? 'bg-primary' : 'bg-muted-foreground/40'
-            )}
-            style={{ width: `${minorPercent}%` }}
-          />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold mb-1.5">
+            DCDA {degreeLabel} Progress
+          </div>
+          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <div className="text-xs mt-1 opacity-80">
+            {hours} of {totalHours} credit hours completed
+          </div>
         </div>
       </div>
-      
-      {/* Insight message */}
-      {minorPercent === 100 && majorPercent < 100 && selectedDegree === 'major' && (
-        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-          ✓ You've completed enough for a minor! Continue {majorTotal - majorHours} more hours for the major.
-        </p>
+      {showAltInsight && altPercent === 100 && altDegreeLabel && (
+        <div className="mt-3 px-3 py-2 bg-white/10 rounded-lg text-xs flex items-center gap-1.5">
+          <Check className="size-3.5" />
+          You've also completed enough for a {altDegreeLabel.toLowerCase()} ({altHours}/{altTotalHours} hrs)
+        </div>
       )}
-      {majorPercent === 100 && selectedDegree === 'minor' && (
-        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-          ✓ You've completed enough courses for a major!
-        </p>
+      {showAltInsight && altPercent < 100 && altPercent > 0 && altDegreeLabel && altHours !== undefined && altTotalHours !== undefined && (
+        <div className="mt-3 px-3 py-2 bg-white/10 rounded-lg text-xs opacity-80">
+          {altDegreeLabel} progress: {altHours}/{altTotalHours} hrs ({altPercent}%)
+        </div>
       )}
     </div>
   )
@@ -118,7 +99,10 @@ interface CourseRowProps {
 function CourseRow({ code, category, showCheck = false }: CourseRowProps) {
   const course = getCourseByCode(code)
   return (
-    <div className="px-4 py-3 flex justify-between items-center text-sm">
+    <div className={cn(
+      "px-4 py-3 flex justify-between items-center text-sm border-l-[3px]",
+      showCheck ? "border-l-green-500" : "border-l-blue-500"
+    )}>
       <div>
         <div className="font-medium">{showCheck && '✓ '}{code}</div>
         <div className="text-xs text-muted-foreground">{category}</div>
@@ -228,13 +212,15 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
         </p>
       </div>
 
-      {/* Dual Progress Bars */}
-      <DualProgressBars
-        majorHours={majorHours}
-        majorTotal={majorTotalHours}
-        minorHours={minorHours}
-        minorTotal={minorTotalHours}
-        selectedDegree={selectedDegreeType}
+      {/* Progress Hero */}
+      <ProgressHero
+        hours={selectedDegreeType === 'major' ? majorHours : minorHours}
+        totalHours={selectedDegreeType === 'major' ? majorTotalHours : minorTotalHours}
+        degreeLabel={selectedDegreeType === 'major' ? 'Major' : 'Minor'}
+        altHours={selectedDegreeType === 'major' ? minorHours : majorHours}
+        altTotalHours={selectedDegreeType === 'major' ? minorTotalHours : majorTotalHours}
+        altDegreeLabel={selectedDegreeType === 'major' ? 'Minor' : 'Major'}
+        showAltInsight
       />
 
       {/* Completed & Scheduled Courses - Side by Side */}
@@ -260,61 +246,66 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
         )}
       </div>
 
-      {/* Remaining Plan */}
+      {/* Remaining Plan — horizontal scroll on mobile */}
       {(scheduledCount > 0 || neededCoursesCount > 0) && (
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="bg-muted px-4 py-3 flex items-center justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CalendarDays className="size-4" />
-              <span className="font-semibold text-sm">Remaining Plan</span>
+              <span className="font-semibold text-sm">Semester Plan</span>
             </div>
-            {neededCoursesCount > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {neededCoursesCount} course{neededCoursesCount !== 1 ? 's' : ''} still needed
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {neededCoursesCount > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {neededCoursesCount} course{neededCoursesCount !== 1 ? 's' : ''} needed
+                </span>
+              )}
+              {semesterPlan.length > 1 && (
+                <span className="text-xs text-muted-foreground sm:hidden">Swipe →</span>
+              )}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-5 px-5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
             {semesterPlan.map(({ semester, courses }) => (
-              <div key={semester} className="bg-card p-4 flex flex-col gap-3">
-                <div className="font-semibold text-xs uppercase tracking-wider text-muted-foreground border-b pb-1">
+              <div key={semester} className="min-w-[220px] max-w-[260px] sm:min-w-0 sm:max-w-none bg-card border rounded-xl overflow-hidden snap-start shrink-0 sm:shrink">
+                <div className="bg-muted px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b">
                   {semester}
                 </div>
                 
-                {courses.length > 0 ? (
-                  <div className="space-y-2">
-                    {courses.map((course, idx) => (
+                <div className="p-2.5 space-y-2">
+                  {courses.length > 0 ? (
+                    courses.map((course, idx) => (
                       <div key={idx} className={cn(
-                        "rounded px-2.5 py-2 border",
+                        "rounded-lg px-3 py-2.5 border-l-[3px]",
                         course.code === '—' 
-                          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50' 
-                          : 'bg-muted/40 border-border/50'
+                          ? 'bg-amber-50 dark:bg-amber-950/30 border-l-amber-400' 
+                          : 'bg-muted/40 border-l-blue-500'
                       )}>
                         <div className={cn(
-                          "font-medium text-xs",
+                          "font-semibold text-xs",
                           course.code === '—' ? 'text-amber-700 dark:text-amber-400' : ''
                         )}>
                           {course.code}
                         </div>
                         {course.category && (
-                          <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                          <div className="text-xs text-muted-foreground mt-0.5">
                             {course.category}
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground italic py-1">No courses</div>
-                )}
+                    ))
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic py-2 px-1">No courses</div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="px-4 py-3 text-[10px] text-muted-foreground border-t bg-muted/30">
-            — indicates course to be determined. Plan is a suggestion only.
-          </div>
+          <p className="text-xs text-muted-foreground">
+            — = course to be determined. Plan is a suggestion only.
+          </p>
         </div>
       )}
     </div>

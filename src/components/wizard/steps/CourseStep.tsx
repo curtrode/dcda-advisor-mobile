@@ -8,12 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Info, Search, Check, Circle } from 'lucide-react'
+import { Info, Search, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RequirementCategoryId, Course } from '@/types'
 import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
 
-// Info button component
+// Info button component — 36px touch target minimum
 function CourseInfoButton({ course, onClick }: { course: Course; onClick: () => void }) {
   return (
     <button
@@ -23,10 +23,10 @@ function CourseInfoButton({ course, onClick }: { course: Course; onClick: () => 
         e.stopPropagation()
         onClick()
       }}
-      className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+      className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-accent border border-transparent hover:border-border transition-colors shrink-0"
       aria-label={`Info about ${course.code}`}
     >
-      <Info className="size-4" />
+      <Info className="size-5" />
     </button>
   )
 }
@@ -122,39 +122,48 @@ export function CourseStep({
           <label
             key={course.code}
             className={cn(
-              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
               isSelected
-                ? "border-primary bg-accent"
+                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
                 : "border-border bg-card hover:border-primary/50"
             )}
           >
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  onSelectCourse(course.code)
-                } else {
-                  onDeselectCourse(course.code)
-                }
-              }}
-            />
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold flex items-center gap-2">
-                {course.code}
-                {isSingleCategoryMultiSelect && isSelected && (
-                  <span className={cn(
-                    "text-xs px-2 py-0.5 rounded-full",
-                    isFirstSelection 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    {isFirstSelection ? 'Elective' : 'Gen Elective'}
+            {/* Left accent bar */}
+            <div className={cn(
+              "w-1 shrink-0 transition-colors",
+              isSelected ? "bg-primary" : "bg-transparent"
+            )} />
+            <div className="flex items-center gap-3 p-4 flex-1 min-w-0">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    onSelectCourse(course.code)
+                  } else {
+                    onDeselectCourse(course.code)
+                  }
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    {course.code}
                   </span>
-                )}
+                  {isSingleCategoryMultiSelect && isSelected && (
+                    <span className={cn(
+                      "text-xs px-2 py-0.5 rounded-full",
+                      isFirstSelection 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {isFirstSelection ? 'Elective' : 'Gen Elective'}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
               </div>
-              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
+              <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
             </div>
-            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
           </label>
         )
       })
@@ -180,41 +189,6 @@ export function CourseStep({
           {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
         </div>
 
-        {/* Status + Not Yet - at top */}
-        {isSingleCategoryMultiSelect && (
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
-              selectedCourses.length > 0
-                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                : isNotYetSelected
-                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                  : "bg-muted text-muted-foreground"
-            )}>
-              {selectedCourses.length > 0 ? (
-                <><Check className="h-4 w-4" />{selectedCourses.length} selected</>
-              ) : isNotYetSelected ? (
-                <><Circle className="h-4 w-4" />Not yet</>
-              ) : (
-                <><Circle className="h-4 w-4" />Select below</>
-              )}
-            </div>
-            
-            <button
-              type="button"
-              onClick={onSelectNotYet}
-              className={cn(
-                "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
-                isNotYetSelected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border hover:border-primary hover:text-primary"
-              )}
-            >
-              Haven't taken any
-            </button>
-          </div>
-        )}
-
         {/* Search Input */}
         {showSearch && (
           <div className="relative">
@@ -225,6 +199,33 @@ export function CourseStep({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8"
             />
+          </div>
+        )}
+
+        {/* "Haven't taken any" as first-class option */}
+        {isSingleCategoryMultiSelect && (
+          <button
+            type="button"
+            onClick={onSelectNotYet}
+            className={cn(
+              "w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all text-left",
+              isNotYetSelected
+                ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30"
+                : "border-border hover:border-amber-300 dark:hover:border-amber-700"
+            )}
+          >
+            <Checkbox checked={isNotYetSelected} onCheckedChange={() => onSelectNotYet()} />
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-foreground">Haven't taken any</div>
+              <div className="text-xs text-muted-foreground">I haven't completed courses in this category yet</div>
+            </div>
+          </button>
+        )}
+
+        {/* Selection count indicator (only when courses are selected) */}
+        {isSingleCategoryMultiSelect && selectedCourses.length > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 w-fit">
+            <Check className="h-4 w-4" />{selectedCourses.length} selected
           </div>
         )}
 
@@ -301,39 +302,6 @@ export function CourseStep({
         )}
       </div>
 
-      {/* Status + Not Yet - at top */}
-      <div className="flex items-center gap-3">
-        <div className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
-          selectedCourse && !isNotYetSelected
-            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            : isNotYetSelected
-              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-              : "bg-muted text-muted-foreground"
-        )}>
-          {selectedCourse && !isNotYetSelected ? (
-            <><Check className="h-4 w-4" />{selectedCourse}</>
-          ) : isNotYetSelected ? (
-            <><Circle className="h-4 w-4" />Not yet</>
-          ) : (
-            <><Circle className="h-4 w-4" />Select below</>
-          )}
-        </div>
-        
-        <button
-          type="button"
-          onClick={onSelectNotYet}
-          className={cn(
-            "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
-            isNotYetSelected
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border hover:border-primary hover:text-primary"
-          )}
-        >
-          Not yet
-        </button>
-      </div>
-
       {/* Search Input */}
       {showSearch && (
         <div className="relative">
@@ -357,6 +325,22 @@ export function CourseStep({
           }
         }}
       >
+        {/* "Not yet" as first-class option in the list */}
+        <label
+          className={cn(
+            "flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
+            isNotYetSelected
+              ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30"
+              : "border-border hover:border-amber-300 dark:hover:border-amber-700"
+          )}
+        >
+          <RadioGroupItem value="not-yet" />
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-foreground">Haven't taken this yet</div>
+            <div className="text-xs text-muted-foreground">I still need to complete this requirement</div>
+          </div>
+        </label>
+
         {searchedCourses.length === 0 && showSearch && (
            <div className="text-center py-8 text-black/50">
              No courses found matching "{searchQuery}"
@@ -367,18 +351,29 @@ export function CourseStep({
           <label
             key={course.code}
             className={cn(
-              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
               selectedCourse === course.code && !isNotYetSelected
-                ? "border-primary bg-accent"
+                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
                 : "border-border bg-card hover:border-primary/50"
             )}
           >
-            <RadioGroupItem value={course.code} />
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold">{course.code}</div>
-              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
+            {/* Left accent bar */}
+            <div className={cn(
+              "w-1 shrink-0 transition-colors",
+              selectedCourse === course.code && !isNotYetSelected ? "bg-primary" : "bg-transparent"
+            )} />
+            <div className="flex items-center gap-3 p-4 flex-1 min-w-0">
+              <RadioGroupItem value={course.code} />
+              <div className="flex-1 min-w-0">
+                <div className="mb-1">
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    {course.code}
+                  </span>
+                </div>
+                <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
+              </div>
+              <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
             </div>
-            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
           </label>
         ))}
       </RadioGroup>

@@ -74,32 +74,43 @@ export function ScheduleStep({
                 <label
                   key={course.code}
                   className={cn(
-                    "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                    "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
                     isSelected
-                      ? "border-primary bg-accent"
+                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
                       : "border-border bg-card hover:border-primary/50"
                   )}
                 >
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        onSelectCourse(course.code)
-                      } else if (onDeselectCourse) {
-                        onDeselectCourse(course.code)
-                      }
-                    }}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className="font-semibold">{course.code}</div>
-                    <div className="text-sm text-muted-foreground">{course.title}</div>
-                    {warning && (
-                      <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
-                        <AlertTriangle className="size-3.5" />
-                        <span>{warning}</span>
+                  {/* Left accent bar */}
+                  <div className={cn(
+                    "w-1 shrink-0 transition-colors",
+                    isSelected ? "bg-primary" : "bg-transparent"
+                  )} />
+                  <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectCourse(course.code)
+                        } else if (onDeselectCourse) {
+                          onDeselectCourse(course.code)
+                        }
+                      }}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="mb-1">
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                          {course.code}
+                        </span>
                       </div>
-                    )}
+                      <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
+                      {warning && (
+                        <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
+                          <AlertTriangle className="size-3.5 shrink-0" />
+                          <span>{warning}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </label>
               )
@@ -174,22 +185,33 @@ export function ScheduleStep({
               <label
                 key={course.code}
                 className={cn(
-                  "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                  "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
                   selectedCourse === course.code && !isSkipped
-                    ? "border-primary bg-accent"
+                    ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
                     : "border-border bg-card hover:border-primary/50"
                 )}
               >
-                <RadioGroupItem value={course.code} className="mt-1" />
-                <div className="flex-1">
-                  <div className="font-semibold">{course.code}</div>
-                  <div className="text-sm text-muted-foreground">{course.title}</div>
-                  {warning && (
-                    <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
-                      <AlertTriangle className="size-3.5" />
-                      <span>{warning}</span>
+                {/* Left accent bar */}
+                <div className={cn(
+                  "w-1 shrink-0 transition-colors",
+                  selectedCourse === course.code && !isSkipped ? "bg-primary" : "bg-transparent"
+                )} />
+                <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
+                  <RadioGroupItem value={course.code} className="mt-1" />
+                  <div className="flex-1">
+                    <div className="mb-1">
+                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                        {course.code}
+                      </span>
                     </div>
-                  )}
+                    <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
+                    {warning && (
+                      <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
+                        <AlertTriangle className="size-3.5 shrink-0" />
+                        <span>{warning}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </label>
             )
