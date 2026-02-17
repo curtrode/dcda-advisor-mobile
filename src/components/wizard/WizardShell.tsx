@@ -18,6 +18,9 @@ interface WizardShellProps {
   currentStepInPart: number
   phases: PhaseInfo[]
 
+  // Step identity (for transition animation)
+  stepKey?: string
+
   // Content
   children: ReactNode
 
@@ -36,6 +39,7 @@ export function WizardShell({
   currentPart,
   currentStepInPart,
   phases,
+  stepKey,
   children,
   canGoBack,
   onBack,
@@ -78,9 +82,14 @@ export function WizardShell({
         phases={phases}
       />
 
-      {/* Content */}
+      {/* Content — fade+slide on step change */}
       <main className="flex-1 overflow-y-auto px-5 py-6 pb-28">
-        {children}
+        <div
+          key={stepKey}
+          className="animate-fade-in-up"
+        >
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}
