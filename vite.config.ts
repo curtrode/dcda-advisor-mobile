@@ -5,12 +5,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/dcda-advisor-mobile/',
+export default defineConfig(() => {
+  const disablePwa = process.env.VITE_PWA_DISABLE === 'true'
+
+  return {
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
+      disable: disablePwa,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png'],
       manifest: false, // Use our manual manifest.json in public/
@@ -61,5 +65,6 @@ export default defineConfig({
         }
       }
     }
+  }
   }
 })

@@ -4,12 +4,22 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/hooks/useTheme'
 import { Moon, Sun } from 'lucide-react'
+import type { WizardPart } from '@/types'
+
+interface PhaseInfo {
+  key: WizardPart
+  label: string
+  stepCount: number
+}
 
 interface WizardShellProps {
-  // Header
-  totalSteps: number
-  currentStep: number
-  partLabel: string
+  // Progress
+  currentPart: WizardPart
+  currentStepInPart: number
+  phases: PhaseInfo[]
+
+  // Step identity (for transition animation)
+  stepKey?: string
 
   // Content
   children: ReactNode
@@ -19,7 +29,6 @@ interface WizardShellProps {
   canGoNext: boolean
   onBack: () => void
   onNext: () => void
-  onStepClick?: (index: number) => void
   nextLabel?: string
   nextDisabled?: boolean
   showBackButton?: boolean
@@ -27,14 +36,14 @@ interface WizardShellProps {
 }
 
 export function WizardShell({
-  totalSteps,
-  currentStep,
-  partLabel,
+  currentPart,
+  currentStepInPart,
+  phases,
+  stepKey,
   children,
   canGoBack,
   onBack,
   onNext,
-  onStepClick,
   nextLabel = 'Next',
   nextDisabled = false,
   showBackButton = true,
@@ -66,21 +75,21 @@ export function WizardShell({
         </button>
       </header>
 
-      {/* Step Indicator */}
-      <StepIndicator 
-        totalSteps={totalSteps} 
-        currentStep={currentStep} 
-        onStepClick={onStepClick} 
+      {/* Segmented Progress Indicator (replaces dot stepper + part label bar) */}
+      <StepIndicator
+        currentPart={currentPart}
+        currentStepInPart={currentStepInPart}
+        phases={phases}
       />
 
-      {/* Part Label */}
-      <div className="bg-primary/90 text-primary-foreground text-xs font-bold uppercase tracking-wider px-6 py-3 shadow-sm relative z-10 backdrop-blur-sm border-t border-white/10">
-        {partLabel}
-      </div>
-
-      {/* Content */}
+      {/* Content — fade+slide on step change */}
       <main className="flex-1 overflow-y-auto px-5 py-6 pb-28">
-        {children}
+        <div
+          key={stepKey}
+          className="animate-fade-in-up"
+        >
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}

@@ -786,14 +786,14 @@ function App() {
   return (
     <>
       <WizardShell
-        totalSteps={wizard.totalSteps}
-        currentStep={wizard.currentStepIndex}
-        partLabel={wizard.partLabel}
+        currentPart={wizard.part}
+        currentStepInPart={wizard.currentStepInPart}
+        phases={wizard.phases}
+        stepKey={wizard.currentStep.id}
         canGoBack={wizard.canGoBack}
         canGoNext={wizard.canGoNext}
         onBack={wizard.goBack}
         onNext={wizard.isLastStep ? handleStartOver : handleNext}
-        onStepClick={wizard.goToStep}
         nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
         nextDisabled={!canProceed}
         showBackButton={true}

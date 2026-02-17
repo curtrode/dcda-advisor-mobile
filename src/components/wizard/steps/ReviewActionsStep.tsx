@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Eye, Printer, Download, Calendar, Mail, Send } from 'lucide-react'
+import { Eye, Printer, Download, Calendar, Mail, Send, ChevronDown, ChevronUp } from 'lucide-react'
 import type { StudentData } from '@/types'
 import { useRequirements } from '@/hooks/useRequirements'
 import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
@@ -21,6 +21,9 @@ interface ReviewActionsStepProps {
 export function ReviewActionsStep({ studentData, generalElectives, updateStudentData }: ReviewActionsStepProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
+  const [showExportOptions, setShowExportOptions] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+  const [submitFilename, setSubmitFilename] = useState('')
   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
@@ -39,55 +42,6 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
     ? (degreeProgress?.completedHours ?? 0)
     : Math.min(totalCompletedHours, minorTotalHours)
 
-  // Organize courses by category for email
-  const completedByCategory: Record<string, string[]> = {}
-  const scheduledByCategory: Record<string, string[]> = {}
-  const neededCategories: { category: string; name: string; remaining: number }[] = []
-  const assignedScheduledCourses = new Set<string>()
-
-  if (degreeProgress) {
-    const sortedCategories = [...degreeProgress.categories].sort((a, b) => {
-      if (a.id === 'generalElectives') return 1
-      if (b.id === 'generalElectives') return -1
-      const aIsElective = a.id === 'dcElective' || a.id === 'daElective'
-      const bIsElective = b.id === 'dcElective' || b.id === 'daElective'
-      if (aIsElective && !bIsElective) return 1
-      if (!aIsElective && bIsElective) return -1
-      return 0
-    })
-
-    for (const cat of sortedCategories) {
-      if (cat.completedCourses.length > 0) {
-        completedByCategory[cat.name] = cat.completedCourses
-      }
-
-      const isAlreadySatisfied = cat.completed >= cat.required
-
-      if (!isAlreadySatisfied) {
-        const scheduledInCat = studentData.scheduledCourses.filter((code) =>
-          cat.courses.includes(code) && !assignedScheduledCourses.has(code)
-        )
-        if (scheduledInCat.length > 0) {
-          scheduledByCategory[cat.name] = scheduledInCat
-          scheduledInCat.forEach((code) => {
-            assignedScheduledCourses.add(code)
-          })
-        }
-
-        const totalFilled = cat.completed + scheduledInCat.length
-        if (totalFilled < cat.required) {
-          const remaining = cat.required - totalFilled
-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
-        }
-      } else {
-        if (cat.completed < cat.required) {
-          const remaining = cat.required - cat.completed
-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
-        }
-      }
-    }
-  }
-
   // Cleanup blob URL to prevent memory leaks
   const revokePreviewUrl = useCallback(() => {
     if (previewUrl) {
@@ -96,7 +50,6 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   }, [previewUrl])
 
   const handlePreview = useCallback(() => {
-    // Revoke previous URL before creating new one
     revokePreviewUrl()
     const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
     setPreviewUrl(blobUrl)
@@ -126,11 +79,11 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   const handleSubmitToAdvisor = () => {
     // Download the CSV file first
     const filename = exportToCSV({ ...studentData, generalElectives })
+    setSubmitFilename(filename)
+    setShowSubmitConfirm(true)
+  }
 
-    // Show alert with instructions
-    alert(`Your advising plan has been downloaded as:\n\n${filename}\n\nAn email will now open. Please attach the downloaded file before sending.`)
-
-    // Build a simple email body (advisor-facing)
+  const handleOpenEmail = () => {
     const date = new Date().toLocaleDateString()
     const degreeLabel = studentData.degreeType === 'major' ? 'Major' : 'Minor'
     const progressHours = selectedDegreeType === 'major' ? majorHours : minorHours
@@ -155,6 +108,7 @@ Submitted via DCDA Advisor Mobile`
 
     const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     window.location.href = mailtoUrl
+    setShowSubmitConfirm(false)
   }
 
   return (
@@ -162,13 +116,36 @@ Submitted via DCDA Advisor Mobile`
       <div>
         <h2 className="text-xl font-semibold mb-2">Save & Submit</h2>
         <p className="text-sm text-muted-foreground">
-          Add notes, save your plan, and schedule an advising appointment.
+          Schedule an appointment, add notes, and submit your plan.
         </p>
       </div>
 
-      {/* Notes Section */}
+      {/* 1. Make Appointment — primary CTA, first */}
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+        <h3 className="font-semibold text-primary text-lg">Schedule an Appointment</h3>
+        <p className="text-sm text-muted-foreground">
+          Meet with your advisor to review your plan and make sure you're on track.
+        </p>
+        <Button
+          asChild
+          className="w-full"
+          size="lg"
+        >
+          <a
+            href="https://calendly.com/c-rode/appointments"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2"
+          >
+            <Calendar className="size-5" />
+            Schedule Advising Appointment
+          </a>
+        </Button>
+      </div>
+
+      {/* 2. Notes Section */}
       <div className="space-y-3">
-        <label htmlFor="notes" className="text-lg font-semibold block px-1">
+        <label htmlFor="notes" className="text-sm font-semibold block px-1">
           Notes or Questions for Advisor
         </label>
         <Textarea 
@@ -180,78 +157,102 @@ Submitted via DCDA Advisor Mobile`
         />
       </div>
 
-      {/* Export Buttons - 2x2 Grid */}
-      <div className="grid grid-cols-2 gap-3 pt-4">
-        <Button
-          variant="outline"
-          className="flex-col h-auto py-4 gap-2"
-          onClick={handlePreview}
-        >
-          <Eye className="size-5" />
-          <span className="text-sm">Preview PDF</span>
-        </Button>
-
-        {!isMobile && (
-          <Button
-            variant="outline"
-            className="flex-col h-auto py-4 gap-2"
-            onClick={handlePrint}
-          >
-            <Printer className="size-5" />
-            <span className="text-sm">Print PDF</span>
-          </Button>
-        )}
-
-        <Button
-          variant="outline"
-          className="flex-col h-auto py-4 gap-2"
-          onClick={handleDownload}
-        >
-          <Download className="size-5" />
-          <span className="text-sm">Save CSV</span>
-        </Button>
-
-        <Button
-          variant="default"
-          className="flex-col h-auto py-4 gap-2"
-          onClick={handleSubmitToAdvisor}
-        >
-          <Send className="size-5" />
-          <span className="text-sm">Submit</span>
-        </Button>
-      </div>
-
-      <p className="text-xs text-muted-foreground text-center">
-        Submit sends your advising record via email. You may also bring a printed copy to your appointment.
+      {/* 3. Submit — single prominent action */}
+      <Button
+        className="w-full gap-2"
+        size="lg"
+        onClick={handleSubmitToAdvisor}
+      >
+        <Send className="size-5" />
+        Submit Plan to Advisor
+      </Button>
+      <p className="text-xs text-muted-foreground text-center -mt-3">
+        Downloads your plan as CSV and opens an email to your advisor.
       </p>
 
-      {/* Make Appointment */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
-        <h3 className="font-semibold text-primary">Make an Appointment</h3>
-        <p className="text-sm text-muted-foreground">
-          Schedule an advising appointment to review your plan together and ensure you're on track.
-        </p>
-        <div className="flex items-start gap-3 text-sm text-muted-foreground">
-          <Mail className="size-4 mt-0.5 flex-shrink-0" />
-          <p>
-            <strong>Tip:</strong> Save your PDF or CSV and email it before your meeting so your advisor can review it in advance.
-          </p>
-        </div>
-        <Button
-          asChild
-          className="w-full"
+      {/* 4. More export options — collapsed */}
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowExportOptions(!showExportOptions)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
         >
-          <a
-            href="https://calendly.com/c-rode/appointments"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2"
-          >
-            <Calendar className="size-4" />
-            Schedule Advising Appointment
-          </a>
-        </Button>
+          <span>More export options</span>
+          {showExportOptions
+            ? <ChevronUp className="size-4" />
+            : <ChevronDown className="size-4" />
+          }
+        </button>
+        {showExportOptions && (
+          <div className="grid grid-cols-2 gap-3 p-4 pt-0 border-t">
+            <Button
+              variant="outline"
+              className="flex-col h-auto py-3 gap-1.5"
+              onClick={handlePreview}
+            >
+              <Eye className="size-4" />
+              <span className="text-xs">Preview PDF</span>
+            </Button>
+
+            {!isMobile && (
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-3 gap-1.5"
+                onClick={handlePrint}
+              >
+                <Printer className="size-4" />
+                <span className="text-xs">Print PDF</span>
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              className="flex-col h-auto py-3 gap-1.5"
+              onClick={handleDownload}
+            >
+              <Download className="size-4" />
+              <span className="text-xs">Save CSV</span>
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Tip */}
+      <div className="flex items-start gap-3 text-sm text-muted-foreground px-1">
+        <Mail className="size-4 mt-0.5 flex-shrink-0" />
+        <p>
+          <strong>Tip:</strong> Save your PDF or CSV and email it before your meeting so your advisor can review it in advance.
+        </p>
+      </div>
+
+      {/* Submit Confirmation Dialog — replaces alert() */}
+      <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Plan Downloaded</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Your advising plan has been saved as:
+            </p>
+            <div className="bg-muted rounded-lg px-3 py-2 text-sm font-mono break-all">
+              {submitFilename}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              An email will open next. Please <strong>attach the downloaded file</strong> before sending.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => setShowSubmitConfirm(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleOpenEmail} className="flex-1 gap-2">
+                <Mail className="size-4" />
+                Open Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* PDF Preview Dialog */}
       <Dialog open={!!previewUrl} onOpenChange={(open) => !open && handleClosePreview()}>

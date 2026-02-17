@@ -33,6 +33,10 @@ export interface UseWizardFlowReturn {
   part: WizardPart
   partLabel: string
 
+  // Phase-based progress
+  phases: { key: WizardPart; label: string; stepCount: number }[]
+  currentStepInPart: number
+
   // Navigation
   canGoBack: boolean
   canGoNext: boolean
@@ -53,6 +57,14 @@ export interface UseWizardFlowReturn {
 
   // Reset
   reset: () => void
+}
+
+const phaseLabels: Record<WizardPart, string> = {
+  completed: 'History',
+  transition: 'Transition',
+  schedule: 'Schedule',
+  review: 'Review',
+  submit: 'Submit',
 }
 
 export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
@@ -172,12 +184,45 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
   // Progress percentage
   const progress = totalSteps > 1 ? Math.round((currentStepIndex / (totalSteps - 1)) * 100) : 0
 
+  const phases = useMemo(() => {
+    const phaseCounts: Record<WizardPart, number> = {
+      completed: 0,
+      transition: 0,
+      schedule: 0,
+      review: 0,
+      submit: 0,
+    }
+    for (const step of steps) {
+      phaseCounts[step.part]++
+    }
+    return (['completed', 'transition', 'schedule', 'review', 'submit'] as WizardPart[])
+      .filter(key => phaseCounts[key] > 0)
+      .map(key => ({
+        key,
+        label: phaseLabels[key],
+        stepCount: phaseCounts[key],
+      }))
+  }, [steps])
+
+  // Calculate which step we are within the current phase (0-based)
+  const currentStepInPart = useMemo(() => {
+    let count = 0
+    for (let i = 0; i < currentStepIndex; i++) {
+      if (steps[i].part === part) {
+        count++
+      }
+    }
+    return count
+  }, [steps, currentStepIndex, part])
+
   return {
     currentStep,
     currentStepIndex,
     totalSteps,
     part,
     partLabel,
+    phases,
+    currentStepInPart,
     canGoBack,
     canGoNext,
     goNext,

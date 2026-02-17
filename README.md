@@ -72,10 +72,41 @@ Create a production build (outputs to `dist/`):
 npm run build
 ```
 
+## Integration: AddRan Advising Ecosystem
+
+This wizard is a **producer** in the hub-and-spoke advising ecosystem. It publishes an advising manifest consumed by [Sandra](https://github.com/TCU-DCDA/addran-advisor-chat) (the AddRan chatbot).
+
+### Manifest generation
+```bash
+# Generate manifest only
+npm run generate-manifest
+
+# Check schema version against source of truth
+npm run check-schema
+```
+
+The `build` script runs manifest generation automatically before `tsc` and `vite build`.
+
+### Key files
+| File | Purpose |
+|---|---|
+| `scripts/generate-manifest.js` | Reads `data/*.json`, produces `public/advising-manifest.json` |
+| `scripts/check-schema-version.js` | CI check — compares local schema version against English wizard |
+| `schemas/manifest.schema.json` | Schema v1.0 (copied from source of truth) |
+| `public/advising-manifest.json` | Generated output — 2 programs, 67 courses |
+| `data/contacts.json` | Department contacts |
+| `data/career-options.json` | Career paths for major/minor |
+
+### Schema governance
+- Source of truth: [`english-advising-wizard/schemas/manifest.schema.json`](https://github.com/TCU-DCDA/english-advising-wizard/blob/main/schemas/manifest.schema.json)
+- CI checks schema version on every push and PR to `main`
+- See [`INTEGRATION_EXECUTION_PLAN.md`](https://github.com/TCU-DCDA/english-advising-wizard/blob/main/INTEGRATION_EXECUTION_PLAN.md) for full integration spec
+
 ## Maintenance Notes
 
 *   **Updating Offerings:** To prepare for a new semester, update `data/offerings-[term].json` and adjust the `getNextSemesterTerm()` helper in `services/courses.ts`.
 *   **Requirement Changes:** Edit `data/requirements.json` to adjust credit hours, added courses, or new policy constraints.
+*   **Updating Contacts/Careers:** Edit `data/contacts.json` and `data/career-options.json`, then run `npm run generate-manifest` to regenerate the advising manifest.
 
 ## License
 

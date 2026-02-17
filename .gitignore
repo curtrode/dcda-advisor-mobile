@@ -30,3 +30,9 @@ data/*.csv
 *.njsproj
 *.sln
 *.sw?
+
+# Build / deploy artifacts
+.firebase/
+*.patch
+tmp/
+output/
