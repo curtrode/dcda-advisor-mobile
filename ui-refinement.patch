@@ -1,0 +1,1875 @@
+From dca5efef8562791889dd0150408395fe803f933b Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 02:51:21 +0000
+Subject: [PATCH 1/5] refactor: replace dot stepper with segmented phase
+ progress bar
+
+- StepIndicator now shows 4 phase segments (History/Schedule/Review/Submit)
+  with fill progress within each active phase and a step counter
+- Transition phase is folded into Schedule visually
+- Removed separate partLabel bar from WizardShell (info merged into indicator)
+- Added phases[] and currentStepInPart to useWizardFlow hook
+- Removed onStepClick prop (navigation is via Back/Next only)
+- Saves ~40px vertical space on mobile
+---
+ public/advising-manifest.json           |   2 +-
+ src/App.tsx                             |   7 +-
+ src/components/wizard/StepIndicator.tsx | 122 +++++++++++++++++++-----
+ src/components/wizard/WizardShell.tsx   |  38 ++++----
+ src/hooks/useWizardFlow.ts              |  46 +++++++++
+ 5 files changed, 168 insertions(+), 47 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index 80b7edc..a541a42 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-16T03:45:46.771Z",
++  "lastUpdated": "2026-02-17T02:50:40.990Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/App.tsx b/src/App.tsx
+index 2726b3e..dd6f8bc 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -786,14 +786,13 @@ function App() {
+   return (
+     <>
+       <WizardShell
+-        totalSteps={wizard.totalSteps}
+-        currentStep={wizard.currentStepIndex}
+-        partLabel={wizard.partLabel}
++        currentPart={wizard.part}
++        currentStepInPart={wizard.currentStepInPart}
++        phases={wizard.phases}
+         canGoBack={wizard.canGoBack}
+         canGoNext={wizard.canGoNext}
+         onBack={wizard.goBack}
+         onNext={wizard.isLastStep ? handleStartOver : handleNext}
+-        onStepClick={wizard.goToStep}
+         nextLabel={wizard.isLastStep ? 'Start Over' : 'Next'}
+         nextDisabled={!canProceed}
+         showBackButton={true}
+diff --git a/src/components/wizard/StepIndicator.tsx b/src/components/wizard/StepIndicator.tsx
+index d7ff06b..5c5dc64 100644
+--- a/src/components/wizard/StepIndicator.tsx
++++ b/src/components/wizard/StepIndicator.tsx
+@@ -1,35 +1,111 @@
+ import { cn } from '@/lib/utils'
++import type { WizardPart } from '@/types'
++import { Check } from 'lucide-react'
++
++interface PhaseInfo {
++  key: WizardPart
++  label: string
++  stepCount: number
++}
+ 
+ interface StepIndicatorProps {
+-  totalSteps: number
+-  currentStep: number
+-  onStepClick?: (index: number) => void
++  /** Which phase is currently active */
++  currentPart: WizardPart
++  /** How many steps into the current phase (0-based index within that phase) */
++  currentStepInPart: number
++  /** Total steps in each phase, ordered */
++  phases: PhaseInfo[]
+   className?: string
+ }
+ 
+-export function StepIndicator({ totalSteps, currentStep, onStepClick, className }: StepIndicatorProps) {
++const PHASE_ORDER: WizardPart[] = ['completed', 'transition', 'schedule', 'review', 'submit']
++
++function getPhaseIndex(part: WizardPart): number {
++  return PHASE_ORDER.indexOf(part)
++}
++
++export function StepIndicator({ currentPart, currentStepInPart, phases, className }: StepIndicatorProps) {
++  const currentPhaseIdx = getPhaseIndex(currentPart)
++  // Transition is not a user-facing phase — fold it into schedule visually
++  const displayPhases = phases.filter(p => p.key !== 'transition')
++
++  // Find the active display phase (transition maps to schedule)
++  const activeDisplayKey = currentPart === 'transition' ? 'schedule' : currentPart
++
+   return (
+-    <div className={cn("flex justify-center gap-1.5 py-4 px-4 bg-card border-b overflow-x-auto", className)}>
+-      {Array.from({ length: totalSteps }).map((_, index) => {
+-        const isClickable = index < currentStep && !!onStepClick
+-        
++    <div className={cn("bg-primary px-4 pt-2.5 pb-3 space-y-1.5", className)}>
++      {/* Phase segments */}
++      <div className="flex gap-1.5">
++        {displayPhases.map((phase) => {
++          const phaseIdx = getPhaseIndex(phase.key)
++          const isActive = phase.key === activeDisplayKey
++          const isComplete = phaseIdx < currentPhaseIdx && !(phase.key === 'schedule' && currentPart === 'transition')
++
++          // Calculate fill percentage for active phase
++          let fillPercent = 0
++          if (isComplete) {
++            fillPercent = 100
++          } else if (isActive) {
++            const totalInPhase = phase.stepCount
++            if (totalInPhase > 0) {
++              // If we're in transition, show ~10% fill for the schedule bar
++              if (currentPart === 'transition') {
++                fillPercent = 10
++              } else {
++                fillPercent = Math.min(100, Math.round(((currentStepInPart + 1) / totalInPhase) * 100))
++              }
++            }
++          }
++
++          return (
++            <div key={phase.key} className="flex-1 flex flex-col items-center gap-1">
++              {/* Label */}
++              <span className={cn(
++                "text-[10px] font-semibold uppercase tracking-wider leading-none flex items-center gap-1",
++                isActive
++                  ? "text-white"
++                  : isComplete
++                    ? "text-white/70"
++                    : "text-white/30"
++              )}>
++                {isComplete && <Check className="size-2.5" />}
++                {phase.label}
++              </span>
++              {/* Bar */}
++              <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
++                <div
++                  className={cn(
++                    "h-full rounded-full transition-all duration-400 ease-out",
++                    isComplete ? "bg-white/60" : isActive ? "bg-white" : ""
++                  )}
++                  style={{ width: `${fillPercent}%` }}
++                />
++              </div>
++            </div>
++          )
++        })}
++      </div>
++
++      {/* Step counter */}
++      {(() => {
++        const activePhase = displayPhases.find(p => p.key === activeDisplayKey)
++        if (!activePhase || activePhase.stepCount === 0) return null
++
++        // For transition, show "Getting ready..." instead of step counter
++        if (currentPart === 'transition') {
++          return (
++            <div className="text-[11px] text-white/50 text-center">
++              Preparing your schedule…
++            </div>
++          )
++        }
++
+         return (
+-          <button
+-            key={index}
+-            onClick={() => isClickable && onStepClick?.(index)}
+-            disabled={!isClickable}
+-            aria-label={`Go to step ${index + 1}`}
+-            className={cn(
+-              "h-2 rounded-full transition-all duration-200 shrink-0",
+-              index < currentStep
+-                ? "w-2 bg-success hover:bg-success/80 cursor-pointer" // Completed
+-                : index === currentStep
+-                ? "w-6 bg-primary cursor-default" // Active
+-                : "w-2 bg-border cursor-default" // Future
+-            )}
+-          />
++          <div className="text-[11px] text-white/50 text-center">
++            Step {currentStepInPart + 1} of {activePhase.stepCount} in {activePhase.label}
++          </div>
+         )
+-      })}
++      })()}
+     </div>
+   )
+ }
+diff --git a/src/components/wizard/WizardShell.tsx b/src/components/wizard/WizardShell.tsx
+index 584829b..00b8907 100644
+--- a/src/components/wizard/WizardShell.tsx
++++ b/src/components/wizard/WizardShell.tsx
+@@ -4,12 +4,19 @@ import { Button } from '@/components/ui/button'
+ import { cn } from '@/lib/utils'
+ import { useTheme } from '@/hooks/useTheme'
+ import { Moon, Sun } from 'lucide-react'
++import type { WizardPart } from '@/types'
++
++interface PhaseInfo {
++  key: WizardPart
++  label: string
++  stepCount: number
++}
+ 
+ interface WizardShellProps {
+-  // Header
+-  totalSteps: number
+-  currentStep: number
+-  partLabel: string
++  // Progress
++  currentPart: WizardPart
++  currentStepInPart: number
++  phases: PhaseInfo[]
+ 
+   // Content
+   children: ReactNode
+@@ -19,7 +26,6 @@ interface WizardShellProps {
+   canGoNext: boolean
+   onBack: () => void
+   onNext: () => void
+-  onStepClick?: (index: number) => void
+   nextLabel?: string
+   nextDisabled?: boolean
+   showBackButton?: boolean
+@@ -27,14 +33,13 @@ interface WizardShellProps {
+ }
+ 
+ export function WizardShell({
+-  totalSteps,
+-  currentStep,
+-  partLabel,
++  currentPart,
++  currentStepInPart,
++  phases,
+   children,
+   canGoBack,
+   onBack,
+   onNext,
+-  onStepClick,
+   nextLabel = 'Next',
+   nextDisabled = false,
+   showBackButton = true,
+@@ -66,18 +71,13 @@ export function WizardShell({
+         </button>
+       </header>
+ 
+-      {/* Step Indicator */}
+-      <StepIndicator 
+-        totalSteps={totalSteps} 
+-        currentStep={currentStep} 
+-        onStepClick={onStepClick} 
++      {/* Segmented Progress Indicator (replaces dot stepper + part label bar) */}
++      <StepIndicator
++        currentPart={currentPart}
++        currentStepInPart={currentStepInPart}
++        phases={phases}
+       />
+ 
+-      {/* Part Label */}
+-      <div className="bg-primary/90 text-primary-foreground text-xs font-bold uppercase tracking-wider px-6 py-3 shadow-sm relative z-10 backdrop-blur-sm border-t border-white/10">
+-        {partLabel}
+-      </div>
+-
+       {/* Content */}
+       <main className="flex-1 overflow-y-auto px-5 py-6 pb-28">
+         {children}
+diff --git a/src/hooks/useWizardFlow.ts b/src/hooks/useWizardFlow.ts
+index e1e9328..8e96738 100644
+--- a/src/hooks/useWizardFlow.ts
++++ b/src/hooks/useWizardFlow.ts
+@@ -33,6 +33,10 @@ export interface UseWizardFlowReturn {
+   part: WizardPart
+   partLabel: string
+ 
++  // Phase-based progress
++  phases: { key: WizardPart; label: string; stepCount: number }[]
++  currentStepInPart: number
++
+   // Navigation
+   canGoBack: boolean
+   canGoNext: boolean
+@@ -172,12 +176,54 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
+   // Progress percentage
+   const progress = totalSteps > 1 ? Math.round((currentStepIndex / (totalSteps - 1)) * 100) : 0
+ 
++  // Phase-based progress info
++  const phaseLabels: Record<WizardPart, string> = {
++    completed: 'History',
++    transition: 'Transition',
++    schedule: 'Schedule',
++    review: 'Review',
++    submit: 'Submit',
++  }
++
++  const phases = useMemo(() => {
++    const phaseCounts: Record<WizardPart, number> = {
++      completed: 0,
++      transition: 0,
++      schedule: 0,
++      review: 0,
++      submit: 0,
++    }
++    for (const step of steps) {
++      phaseCounts[step.part]++
++    }
++    return (['completed', 'transition', 'schedule', 'review', 'submit'] as WizardPart[])
++      .filter(key => phaseCounts[key] > 0)
++      .map(key => ({
++        key,
++        label: phaseLabels[key],
++        stepCount: phaseCounts[key],
++      }))
++  }, [steps])
++
++  // Calculate which step we are within the current phase (0-based)
++  const currentStepInPart = useMemo(() => {
++    let count = 0
++    for (let i = 0; i < currentStepIndex; i++) {
++      if (steps[i].part === part) {
++        count++
++      }
++    }
++    return count
++  }, [steps, currentStepIndex, part])
++
+   return {
+     currentStep,
+     currentStepIndex,
+     totalSteps,
+     part,
+     partLabel,
++    phases,
++    currentStepInPart,
+     canGoBack,
+     canGoNext,
+     goNext,
+-- 
+2.43.0
+
+
+From cb86e43f5666937fbb85a392c1f8bdf1743cb749 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 02:59:48 +0000
+Subject: [PATCH 2/5] refactor: move 'Not yet' into course list as first-class
+ option
+
+- Single-select: 'Haven't taken this yet' is now the first radio option
+  in the list with dashed amber border, replacing the disconnected
+  status pill + button above the list
+- Multi-select: 'Haven't taken any' is now an inline checkbox option
+  at the top of the course list with the same dashed amber style
+- Selection count badge only appears when courses are actually selected
+- Removes cognitive overhead of understanding a separate status area
+- Removed unused Circle icon import
+---
+ public/advising-manifest.json                 |   2 +-
+ src/components/wizard/steps/CourseStep.tsx    | 205 +++++++++---------
+ .../wizard/steps/ReviewSummaryStep.tsx        | 179 ++++++++-------
+ src/components/wizard/steps/ScheduleStep.tsx  |  86 +++++---
+ 4 files changed, 240 insertions(+), 232 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index a541a42..723861c 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-17T02:50:40.990Z",
++  "lastUpdated": "2026-02-17T02:59:16.277Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/components/wizard/steps/CourseStep.tsx b/src/components/wizard/steps/CourseStep.tsx
+index 8c4ab96..4f534a2 100644
+--- a/src/components/wizard/steps/CourseStep.tsx
++++ b/src/components/wizard/steps/CourseStep.tsx
+@@ -8,12 +8,12 @@ import {
+   DialogHeader,
+   DialogTitle,
+ } from '@/components/ui/dialog'
+-import { Info, Search, Check, Circle } from 'lucide-react'
++import { Info, Search, Check } from 'lucide-react'
+ import { cn } from '@/lib/utils'
+ import type { RequirementCategoryId, Course } from '@/types'
+ import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
+ 
+-// Info button component
++// Info button component — 36px touch target minimum
+ function CourseInfoButton({ course, onClick }: { course: Course; onClick: () => void }) {
+   return (
+     <button
+@@ -23,10 +23,10 @@ function CourseInfoButton({ course, onClick }: { course: Course; onClick: () =>
+         e.stopPropagation()
+         onClick()
+       }}
+-      className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
++      className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-accent border border-transparent hover:border-border transition-colors shrink-0"
+       aria-label={`Info about ${course.code}`}
+     >
+-      <Info className="size-4" />
++      <Info className="size-5" />
+     </button>
+   )
+ }
+@@ -122,39 +122,48 @@ export function CourseStep({
+           <label
+             key={course.code}
+             className={cn(
+-              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
++              "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+               isSelected
+-                ? "border-primary bg-accent"
++                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                 : "border-border bg-card hover:border-primary/50"
+             )}
+           >
+-            <Checkbox
+-              checked={isSelected}
+-              onCheckedChange={(checked) => {
+-                if (checked) {
+-                  onSelectCourse(course.code)
+-                } else {
+-                  onDeselectCourse(course.code)
+-                }
+-              }}
+-            />
+-            <div className="flex-1 min-w-0">
+-              <div className="font-semibold flex items-center gap-2">
+-                {course.code}
+-                {isSingleCategoryMultiSelect && isSelected && (
+-                  <span className={cn(
+-                    "text-xs px-2 py-0.5 rounded-full",
+-                    isFirstSelection 
+-                      ? "bg-primary text-primary-foreground" 
+-                      : "bg-muted text-muted-foreground"
+-                  )}>
+-                    {isFirstSelection ? 'Elective' : 'Gen Elective'}
++            {/* Left accent bar */}
++            <div className={cn(
++              "w-1 shrink-0 transition-colors",
++              isSelected ? "bg-primary" : "bg-transparent"
++            )} />
++            <div className="flex items-center gap-3 p-4 flex-1 min-w-0">
++              <Checkbox
++                checked={isSelected}
++                onCheckedChange={(checked) => {
++                  if (checked) {
++                    onSelectCourse(course.code)
++                  } else {
++                    onDeselectCourse(course.code)
++                  }
++                }}
++              />
++              <div className="flex-1 min-w-0">
++                <div className="flex items-center gap-2 mb-1">
++                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                    {course.code}
+                   </span>
+-                )}
++                  {isSingleCategoryMultiSelect && isSelected && (
++                    <span className={cn(
++                      "text-xs px-2 py-0.5 rounded-full",
++                      isFirstSelection 
++                        ? "bg-primary text-primary-foreground" 
++                        : "bg-muted text-muted-foreground"
++                    )}>
++                      {isFirstSelection ? 'Elective' : 'Gen Elective'}
++                    </span>
++                  )}
++                </div>
++                <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
+               </div>
+-              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
++              <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
+             </div>
+-            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
+           </label>
+         )
+       })
+@@ -180,41 +189,6 @@ export function CourseStep({
+           {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+         </div>
+ 
+-        {/* Status + Not Yet - at top */}
+-        {isSingleCategoryMultiSelect && (
+-          <div className="flex items-center gap-3">
+-            <div className={cn(
+-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
+-              selectedCourses.length > 0
+-                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+-                : isNotYetSelected
+-                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+-                  : "bg-muted text-muted-foreground"
+-            )}>
+-              {selectedCourses.length > 0 ? (
+-                <><Check className="h-4 w-4" />{selectedCourses.length} selected</>
+-              ) : isNotYetSelected ? (
+-                <><Circle className="h-4 w-4" />Not yet</>
+-              ) : (
+-                <><Circle className="h-4 w-4" />Select below</>
+-              )}
+-            </div>
+-            
+-            <button
+-              type="button"
+-              onClick={onSelectNotYet}
+-              className={cn(
+-                "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+-                isNotYetSelected
+-                  ? "border-primary bg-primary text-primary-foreground"
+-                  : "border-border hover:border-primary hover:text-primary"
+-              )}
+-            >
+-              Haven't taken any
+-            </button>
+-          </div>
+-        )}
+-
+         {/* Search Input */}
+         {showSearch && (
+           <div className="relative">
+@@ -228,6 +202,33 @@ export function CourseStep({
+           </div>
+         )}
+ 
++        {/* "Haven't taken any" as first-class option */}
++        {isSingleCategoryMultiSelect && (
++          <button
++            type="button"
++            onClick={onSelectNotYet}
++            className={cn(
++              "w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all text-left",
++              isNotYetSelected
++                ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30"
++                : "border-border hover:border-amber-300 dark:hover:border-amber-700"
++            )}
++          >
++            <Checkbox checked={isNotYetSelected} onCheckedChange={() => onSelectNotYet()} />
++            <div className="flex-1">
++              <div className="text-sm font-semibold text-foreground">Haven't taken any</div>
++              <div className="text-xs text-muted-foreground">I haven't completed courses in this category yet</div>
++            </div>
++          </button>
++        )}
++
++        {/* Selection count indicator (only when courses are selected) */}
++        {isSingleCategoryMultiSelect && selectedCourses.length > 0 && (
++          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 w-fit">
++            <Check className="h-4 w-4" />{selectedCourses.length} selected
++          </div>
++        )}
++
+         <div className="space-y-6">
+           {searchedCourses.length === 0 ? (
+              <div className="text-center py-8 text-black/50">
+@@ -301,39 +302,6 @@ export function CourseStep({
+         )}
+       </div>
+ 
+-      {/* Status + Not Yet - at top */}
+-      <div className="flex items-center gap-3">
+-        <div className={cn(
+-          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
+-          selectedCourse && !isNotYetSelected
+-            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+-            : isNotYetSelected
+-              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+-              : "bg-muted text-muted-foreground"
+-        )}>
+-          {selectedCourse && !isNotYetSelected ? (
+-            <><Check className="h-4 w-4" />{selectedCourse}</>
+-          ) : isNotYetSelected ? (
+-            <><Circle className="h-4 w-4" />Not yet</>
+-          ) : (
+-            <><Circle className="h-4 w-4" />Select below</>
+-          )}
+-        </div>
+-        
+-        <button
+-          type="button"
+-          onClick={onSelectNotYet}
+-          className={cn(
+-            "ml-auto px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+-            isNotYetSelected
+-              ? "border-primary bg-primary text-primary-foreground"
+-              : "border-border hover:border-primary hover:text-primary"
+-          )}
+-        >
+-          Not yet
+-        </button>
+-      </div>
+-
+       {/* Search Input */}
+       {showSearch && (
+         <div className="relative">
+@@ -357,6 +325,22 @@ export function CourseStep({
+           }
+         }}
+       >
++        {/* "Not yet" as first-class option in the list */}
++        <label
++          className={cn(
++            "flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
++            isNotYetSelected
++              ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30"
++              : "border-border hover:border-amber-300 dark:hover:border-amber-700"
++          )}
++        >
++          <RadioGroupItem value="not-yet" />
++          <div className="flex-1">
++            <div className="text-sm font-semibold text-foreground">Haven't taken this yet</div>
++            <div className="text-xs text-muted-foreground">I still need to complete this requirement</div>
++          </div>
++        </label>
++
+         {searchedCourses.length === 0 && showSearch && (
+            <div className="text-center py-8 text-black/50">
+              No courses found matching "{searchQuery}"
+@@ -367,18 +351,29 @@ export function CourseStep({
+           <label
+             key={course.code}
+             className={cn(
+-              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
++              "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+               selectedCourse === course.code && !isNotYetSelected
+-                ? "border-primary bg-accent"
++                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                 : "border-border bg-card hover:border-primary/50"
+             )}
+           >
+-            <RadioGroupItem value={course.code} />
+-            <div className="flex-1 min-w-0">
+-              <div className="font-semibold">{course.code}</div>
+-              <div className="text-sm text-muted-foreground truncate">{course.title}</div>
++            {/* Left accent bar */}
++            <div className={cn(
++              "w-1 shrink-0 transition-colors",
++              selectedCourse === course.code && !isNotYetSelected ? "bg-primary" : "bg-transparent"
++            )} />
++            <div className="flex items-center gap-3 p-4 flex-1 min-w-0">
++              <RadioGroupItem value={course.code} />
++              <div className="flex-1 min-w-0">
++                <div className="mb-1">
++                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                    {course.code}
++                  </span>
++                </div>
++                <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
++              </div>
++              <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
+             </div>
+-            <CourseInfoButton course={course} onClick={() => setInfoCourse(course)} />
+           </label>
+         ))}
+       </RadioGroup>
+diff --git a/src/components/wizard/steps/ReviewSummaryStep.tsx b/src/components/wizard/steps/ReviewSummaryStep.tsx
+index 66152e2..ec552cc 100644
+--- a/src/components/wizard/steps/ReviewSummaryStep.tsx
++++ b/src/components/wizard/steps/ReviewSummaryStep.tsx
+@@ -2,73 +2,54 @@ import type { StudentData } from '@/types'
+ import { useRequirements } from '@/hooks/useRequirements'
+ import { getCourseByCode, buildSemesterPlan, getNextSemesterTerm } from '@/services/courses'
+ import { cn } from '@/lib/utils'
+-import { CalendarDays } from 'lucide-react'
++import { CalendarDays, Check } from 'lucide-react'
+ 
+-// Dual Progress Bar Component
+-interface DualProgressProps {
+-  majorHours: number
+-  majorTotal: number
+-  minorHours: number
+-  minorTotal: number
+-  selectedDegree: 'major' | 'minor'
++// Hero Progress Component — large percentage with bar
++interface ProgressHeroProps {
++  hours: number
++  totalHours: number
++  degreeLabel: string
++  altHours?: number
++  altTotalHours?: number
++  altDegreeLabel?: string
++  showAltInsight?: boolean
+ }
+ 
+-function DualProgressBars({ majorHours, majorTotal, minorHours, minorTotal, selectedDegree }: DualProgressProps) {
+-  const majorPercent = Math.min(100, Math.round((majorHours / majorTotal) * 100))
+-  const minorPercent = Math.min(100, Math.round((minorHours / minorTotal) * 100))
++function ProgressHero({ hours, totalHours, degreeLabel, altHours, altTotalHours, altDegreeLabel, showAltInsight }: ProgressHeroProps) {
++  const percent = Math.min(100, Math.round((hours / totalHours) * 100))
++  const altPercent = altHours && altTotalHours ? Math.min(100, Math.round((altHours / altTotalHours) * 100)) : 0
+   
+   return (
+-    <div className="bg-card border rounded-xl p-4 space-y-3">
+-      <div className="text-sm font-medium text-muted-foreground">Progress Comparison</div>
+-      
+-      {/* Major Progress */}
+-      <div className="space-y-1">
+-        <div className="flex justify-between text-sm">
+-          <span className={cn("font-medium", selectedDegree === 'major' ? 'text-primary' : 'text-muted-foreground')}>
+-            Major {selectedDegree === 'major' && '(selected)'}
+-          </span>
+-          <span className="text-muted-foreground">{majorHours}/{majorTotal} hrs ({majorPercent}%)</span>
++    <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-5 text-primary-foreground">
++      <div className="flex items-center gap-4">
++        <div className="text-5xl font-extrabold leading-none tabular-nums">
++          {percent}<span className="text-2xl font-semibold">%</span>
+         </div>
+-        <div className="h-3 bg-muted rounded-full overflow-hidden">
+-          <div 
+-            className={cn(
+-              "h-full rounded-full transition-all",
+-              selectedDegree === 'major' ? 'bg-primary' : 'bg-muted-foreground/40'
+-            )}
+-            style={{ width: `${majorPercent}%` }}
+-          />
++        <div className="flex-1 min-w-0">
++          <div className="text-sm font-semibold mb-1.5">
++            DCDA {degreeLabel} Progress
++          </div>
++          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
++            <div
++              className="h-full bg-white rounded-full transition-all duration-500 ease-out"
++              style={{ width: `${percent}%` }}
++            />
++          </div>
++          <div className="text-xs mt-1 opacity-80">
++            {hours} of {totalHours} credit hours completed
++          </div>
+         </div>
+       </div>
+-      
+-      {/* Minor Progress */}
+-      <div className="space-y-1">
+-        <div className="flex justify-between text-sm">
+-          <span className={cn("font-medium", selectedDegree === 'minor' ? 'text-primary' : 'text-muted-foreground')}>
+-            Minor {selectedDegree === 'minor' && '(selected)'}
+-          </span>
+-          <span className="text-muted-foreground">{minorHours}/{minorTotal} hrs ({minorPercent}%)</span>
++      {showAltInsight && altPercent === 100 && altDegreeLabel && (
++        <div className="mt-3 px-3 py-2 bg-white/10 rounded-lg text-xs flex items-center gap-1.5">
++          <Check className="size-3.5" />
++          You've also completed enough for a {altDegreeLabel.toLowerCase()} ({altHours}/{altTotalHours} hrs)
+         </div>
+-        <div className="h-3 bg-muted rounded-full overflow-hidden">
+-          <div 
+-            className={cn(
+-              "h-full rounded-full transition-all",
+-              selectedDegree === 'minor' ? 'bg-primary' : 'bg-muted-foreground/40'
+-            )}
+-            style={{ width: `${minorPercent}%` }}
+-          />
+-        </div>
+-      </div>
+-      
+-      {/* Insight message */}
+-      {minorPercent === 100 && majorPercent < 100 && selectedDegree === 'major' && (
+-        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+-          ✓ You've completed enough for a minor! Continue {majorTotal - majorHours} more hours for the major.
+-        </p>
+       )}
+-      {majorPercent === 100 && selectedDegree === 'minor' && (
+-        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+-          ✓ You've completed enough courses for a major!
+-        </p>
++      {showAltInsight && altPercent < 100 && altPercent > 0 && altDegreeLabel && altHours !== undefined && altTotalHours !== undefined && (
++        <div className="mt-3 px-3 py-2 bg-white/10 rounded-lg text-xs opacity-80">
++          {altDegreeLabel} progress: {altHours}/{altTotalHours} hrs ({altPercent}%)
++        </div>
+       )}
+     </div>
+   )
+@@ -118,7 +99,10 @@ interface CourseRowProps {
+ function CourseRow({ code, category, showCheck = false }: CourseRowProps) {
+   const course = getCourseByCode(code)
+   return (
+-    <div className="px-4 py-3 flex justify-between items-center text-sm">
++    <div className={cn(
++      "px-4 py-3 flex justify-between items-center text-sm border-l-[3px]",
++      showCheck ? "border-l-green-500" : "border-l-blue-500"
++    )}>
+       <div>
+         <div className="font-medium">{showCheck && '✓ '}{code}</div>
+         <div className="text-xs text-muted-foreground">{category}</div>
+@@ -228,13 +212,15 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
+         </p>
+       </div>
+ 
+-      {/* Dual Progress Bars */}
+-      <DualProgressBars
+-        majorHours={majorHours}
+-        majorTotal={majorTotalHours}
+-        minorHours={minorHours}
+-        minorTotal={minorTotalHours}
+-        selectedDegree={selectedDegreeType}
++      {/* Progress Hero */}
++      <ProgressHero
++        hours={selectedDegreeType === 'major' ? majorHours : minorHours}
++        totalHours={selectedDegreeType === 'major' ? majorTotalHours : minorTotalHours}
++        degreeLabel={selectedDegreeType === 'major' ? 'Major' : 'Minor'}
++        altHours={selectedDegreeType === 'major' ? minorHours : majorHours}
++        altTotalHours={selectedDegreeType === 'major' ? minorTotalHours : majorTotalHours}
++        altDegreeLabel={selectedDegreeType === 'major' ? 'Minor' : 'Major'}
++        showAltInsight
+       />
+ 
+       {/* Completed & Scheduled Courses - Side by Side */}
+@@ -260,61 +246,66 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
+         )}
+       </div>
+ 
+-      {/* Remaining Plan */}
++      {/* Remaining Plan — horizontal scroll on mobile */}
+       {(scheduledCount > 0 || neededCoursesCount > 0) && (
+-        <div className="bg-card border rounded-xl overflow-hidden">
+-          <div className="bg-muted px-4 py-3 flex items-center justify-between">
++        <div className="space-y-3">
++          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2">
+               <CalendarDays className="size-4" />
+-              <span className="font-semibold text-sm">Remaining Plan</span>
++              <span className="font-semibold text-sm">Semester Plan</span>
++            </div>
++            <div className="flex items-center gap-2">
++              {neededCoursesCount > 0 && (
++                <span className="text-xs text-muted-foreground">
++                  {neededCoursesCount} course{neededCoursesCount !== 1 ? 's' : ''} needed
++                </span>
++              )}
++              {semesterPlan.length > 1 && (
++                <span className="text-xs text-muted-foreground sm:hidden">Swipe →</span>
++              )}
+             </div>
+-            {neededCoursesCount > 0 && (
+-              <span className="text-xs text-muted-foreground">
+-                {neededCoursesCount} course{neededCoursesCount !== 1 ? 's' : ''} still needed
+-              </span>
+-            )}
+           </div>
+-          
+-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
++
++          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-5 px-5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
+             {semesterPlan.map(({ semester, courses }) => (
+-              <div key={semester} className="bg-card p-4 flex flex-col gap-3">
+-                <div className="font-semibold text-xs uppercase tracking-wider text-muted-foreground border-b pb-1">
++              <div key={semester} className="min-w-[220px] max-w-[260px] sm:min-w-0 sm:max-w-none bg-card border rounded-xl overflow-hidden snap-start shrink-0 sm:shrink">
++                <div className="bg-muted px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b">
+                   {semester}
+                 </div>
+                 
+-                {courses.length > 0 ? (
+-                  <div className="space-y-2">
+-                    {courses.map((course, idx) => (
++                <div className="p-2.5 space-y-2">
++                  {courses.length > 0 ? (
++                    courses.map((course, idx) => (
+                       <div key={idx} className={cn(
+-                        "rounded px-2.5 py-2 border",
++                        "rounded-lg px-3 py-2.5 border-l-[3px]",
+                         course.code === '—' 
+-                          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50' 
+-                          : 'bg-muted/40 border-border/50'
++                          ? 'bg-amber-50 dark:bg-amber-950/30 border-l-amber-400' 
++                          : 'bg-muted/40 border-l-blue-500'
+                       )}>
+                         <div className={cn(
+-                          "font-medium text-xs",
++                          "font-semibold text-xs",
+                           course.code === '—' ? 'text-amber-700 dark:text-amber-400' : ''
+                         )}>
+                           {course.code}
+                         </div>
+                         {course.category && (
+-                          <div className="text-[10px] text-muted-foreground truncate mt-0.5">
++                          <div className="text-xs text-muted-foreground mt-0.5">
+                             {course.category}
+                           </div>
+                         )}
+                       </div>
+-                    ))}
+-                  </div>
+-                ) : (
+-                  <div className="text-xs text-muted-foreground italic py-1">No courses</div>
+-                )}
++                    ))
++                  ) : (
++                    <div className="text-xs text-muted-foreground italic py-2 px-1">No courses</div>
++                  )}
++                </div>
+               </div>
+             ))}
+           </div>
+ 
+-          <div className="px-4 py-3 text-[10px] text-muted-foreground border-t bg-muted/30">
+-            — indicates course to be determined. Plan is a suggestion only.
+-          </div>
++          <p className="text-xs text-muted-foreground">
++            — = course to be determined. Plan is a suggestion only.
++          </p>
+         </div>
+       )}
+     </div>
+diff --git a/src/components/wizard/steps/ScheduleStep.tsx b/src/components/wizard/steps/ScheduleStep.tsx
+index 17459b9..2fb25d9 100644
+--- a/src/components/wizard/steps/ScheduleStep.tsx
++++ b/src/components/wizard/steps/ScheduleStep.tsx
+@@ -74,32 +74,43 @@ export function ScheduleStep({
+                 <label
+                   key={course.code}
+                   className={cn(
+-                    "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
++                    "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+                     isSelected
+-                      ? "border-primary bg-accent"
++                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                       : "border-border bg-card hover:border-primary/50"
+                   )}
+                 >
+-                  <Checkbox
+-                    checked={isSelected}
+-                    onCheckedChange={(checked) => {
+-                      if (checked) {
+-                        onSelectCourse(course.code)
+-                      } else if (onDeselectCourse) {
+-                        onDeselectCourse(course.code)
+-                      }
+-                    }}
+-                    className="mt-1"
+-                  />
+-                  <div className="flex-1">
+-                    <div className="font-semibold">{course.code}</div>
+-                    <div className="text-sm text-muted-foreground">{course.title}</div>
+-                    {warning && (
+-                      <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
+-                        <AlertTriangle className="size-3.5" />
+-                        <span>{warning}</span>
++                  {/* Left accent bar */}
++                  <div className={cn(
++                    "w-1 shrink-0 transition-colors",
++                    isSelected ? "bg-primary" : "bg-transparent"
++                  )} />
++                  <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
++                    <Checkbox
++                      checked={isSelected}
++                      onCheckedChange={(checked) => {
++                        if (checked) {
++                          onSelectCourse(course.code)
++                        } else if (onDeselectCourse) {
++                          onDeselectCourse(course.code)
++                        }
++                      }}
++                      className="mt-1"
++                    />
++                    <div className="flex-1">
++                      <div className="mb-1">
++                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                          {course.code}
++                        </span>
+                       </div>
+-                    )}
++                      <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
++                      {warning && (
++                        <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
++                          <AlertTriangle className="size-3.5 shrink-0" />
++                          <span>{warning}</span>
++                        </div>
++                      )}
++                    </div>
+                   </div>
+                 </label>
+               )
+@@ -174,22 +185,33 @@ export function ScheduleStep({
+               <label
+                 key={course.code}
+                 className={cn(
+-                  "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
++                  "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+                   selectedCourse === course.code && !isSkipped
+-                    ? "border-primary bg-accent"
++                    ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                     : "border-border bg-card hover:border-primary/50"
+                 )}
+               >
+-                <RadioGroupItem value={course.code} className="mt-1" />
+-                <div className="flex-1">
+-                  <div className="font-semibold">{course.code}</div>
+-                  <div className="text-sm text-muted-foreground">{course.title}</div>
+-                  {warning && (
+-                    <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600">
+-                      <AlertTriangle className="size-3.5" />
+-                      <span>{warning}</span>
++                {/* Left accent bar */}
++                <div className={cn(
++                  "w-1 shrink-0 transition-colors",
++                  selectedCourse === course.code && !isSkipped ? "bg-primary" : "bg-transparent"
++                )} />
++                <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
++                  <RadioGroupItem value={course.code} className="mt-1" />
++                  <div className="flex-1">
++                    <div className="mb-1">
++                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                        {course.code}
++                      </span>
+                     </div>
+-                  )}
++                    <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
++                    {warning && (
++                      <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
++                        <AlertTriangle className="size-3.5 shrink-0" />
++                        <span>{warning}</span>
++                      </div>
++                    )}
++                  </div>
+                 </div>
+               </label>
+             )
+-- 
+2.43.0
+
+
+From 1074fc7f2eb44ea0b281dcc9b4b2c91ed939d557 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 03:05:31 +0000
+Subject: [PATCH 3/5] refine: improve semester plan readability and visual
+ hierarchy
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Bump course codes from text-xs to text-sm for readability
+- Show course titles (not just codes) when available via getCourseByCode lookup
+- Fall back to category label for TBD courses (—)
+- First semester card gets a purple ring + 'Next' badge to distinguish it
+- Wider cards on mobile (240-280px vs 220-260px)
+- Better swipe hint with dot indicators instead of plain text
+- Hide swipe hint on desktop (sm:hidden)
+---
+ public/advising-manifest.json                 |   2 +-
+ .../wizard/steps/ReviewSummaryStep.tsx        | 135 ++++++++++++------
+ 2 files changed, 91 insertions(+), 46 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index 723861c..c84c8e4 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-17T02:59:16.277Z",
++  "lastUpdated": "2026-02-17T03:03:28.679Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/components/wizard/steps/ReviewSummaryStep.tsx b/src/components/wizard/steps/ReviewSummaryStep.tsx
+index ec552cc..66f9f1d 100644
+--- a/src/components/wizard/steps/ReviewSummaryStep.tsx
++++ b/src/components/wizard/steps/ReviewSummaryStep.tsx
+@@ -1,8 +1,9 @@
++import { useState } from 'react'
+ import type { StudentData } from '@/types'
+ import { useRequirements } from '@/hooks/useRequirements'
+ import { getCourseByCode, buildSemesterPlan, getNextSemesterTerm } from '@/services/courses'
+ import { cn } from '@/lib/utils'
+-import { CalendarDays, Check } from 'lucide-react'
++import { CalendarDays, Check, ChevronDown, ChevronUp } from 'lucide-react'
+ 
+ // Hero Progress Component — large percentage with bar
+ interface ProgressHeroProps {
+@@ -63,6 +64,8 @@ interface SummarySectionProps {
+ }
+ 
+ function SummarySection({ title, status, count, children }: SummarySectionProps) {
++  const [isOpen, setIsOpen] = useState(false)
++
+   const statusColors = {
+     complete: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+     scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+@@ -77,15 +80,24 @@ function SummarySection({ title, status, count, children }: SummarySectionProps)
+ 
+   return (
+     <div className="bg-card border rounded-xl overflow-hidden">
+-      <div className="bg-muted px-4 py-3 flex items-center justify-between">
++      <button
++        type="button"
++        onClick={() => setIsOpen(!isOpen)}
++        className="w-full bg-muted px-4 py-3 flex items-center justify-between text-left hover:bg-muted/80 transition-colors"
++      >
+         <span className="font-semibold text-sm">{title}</span>
+-        <span className={cn("text-xs px-2 py-1 rounded font-medium", statusColors[status])}>
+-          {count} {statusLabels[status]}
+-        </span>
+-      </div>
+-      <div className="divide-y">
+-        {children}
+-      </div>
++        <div className="flex items-center gap-2">
++          <span className={cn("text-xs px-2 py-1 rounded font-medium", statusColors[status])}>
++            {count} {statusLabels[status]}
++          </span>
++          {isOpen ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
++        </div>
++      </button>
++      {isOpen && (
++        <div className="divide-y">
++          {children}
++        </div>
++      )}
+     </div>
+   )
+ }
+@@ -108,7 +120,7 @@ function CourseRow({ code, category, showCheck = false }: CourseRowProps) {
+         <div className="text-xs text-muted-foreground">{category}</div>
+       </div>
+       {course && (
+-        <div className="text-xs text-muted-foreground text-right max-w-[120px] truncate">
++        <div className="text-xs text-muted-foreground text-right max-w-[150px] leading-snug">
+           {course.title}
+         </div>
+       )}
+@@ -260,47 +272,80 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
+                   {neededCoursesCount} course{neededCoursesCount !== 1 ? 's' : ''} needed
+                 </span>
+               )}
+-              {semesterPlan.length > 1 && (
+-                <span className="text-xs text-muted-foreground sm:hidden">Swipe →</span>
+-              )}
+             </div>
+           </div>
+ 
++          {/* Scroll hint - visible on mobile when multiple semesters */}
++          {semesterPlan.length > 1 && (
++            <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:hidden">
++              <span className="flex gap-0.5">
++                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
++                <span className="w-1.5 h-1.5 rounded-full bg-border" />
++                <span className="w-1.5 h-1.5 rounded-full bg-border" />
++              </span>
++              Swipe to see all semesters
++            </div>
++          )}
++
+           <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-5 px-5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
+-            {semesterPlan.map(({ semester, courses }) => (
+-              <div key={semester} className="min-w-[220px] max-w-[260px] sm:min-w-0 sm:max-w-none bg-card border rounded-xl overflow-hidden snap-start shrink-0 sm:shrink">
+-                <div className="bg-muted px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b">
+-                  {semester}
+-                </div>
+-                
+-                <div className="p-2.5 space-y-2">
+-                  {courses.length > 0 ? (
+-                    courses.map((course, idx) => (
+-                      <div key={idx} className={cn(
+-                        "rounded-lg px-3 py-2.5 border-l-[3px]",
+-                        course.code === '—' 
+-                          ? 'bg-amber-50 dark:bg-amber-950/30 border-l-amber-400' 
+-                          : 'bg-muted/40 border-l-blue-500'
+-                      )}>
+-                        <div className={cn(
+-                          "font-semibold text-xs",
+-                          course.code === '—' ? 'text-amber-700 dark:text-amber-400' : ''
+-                        )}>
+-                          {course.code}
+-                        </div>
+-                        {course.category && (
+-                          <div className="text-xs text-muted-foreground mt-0.5">
+-                            {course.category}
++            {semesterPlan.map(({ semester, courses }, semIdx) => {
++              const isFirstSemester = semIdx === 0 && scheduledCount > 0
++              return (
++                <div key={semester} className={cn(
++                  "min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none bg-card border rounded-xl overflow-hidden snap-start shrink-0 sm:shrink",
++                  isFirstSemester && "ring-2 ring-primary/30 border-primary/40"
++                )}>
++                  <div className={cn(
++                    "px-3 py-2.5 text-xs font-bold uppercase tracking-wider border-b flex items-center justify-between",
++                    isFirstSemester
++                      ? "bg-primary/10 text-primary"
++                      : "bg-muted text-muted-foreground"
++                  )}>
++                    <span>{semester}</span>
++                    {isFirstSemester && (
++                      <span className="text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded normal-case tracking-normal">
++                        Next
++                      </span>
++                    )}
++                  </div>
++                  
++                  <div className="p-2.5 space-y-2">
++                    {courses.length > 0 ? (
++                      courses.map((course, idx) => {
++                        const courseInfo = course.code !== '—' ? getCourseByCode(course.code) : null
++                        return (
++                          <div key={idx} className={cn(
++                            "rounded-lg px-3 py-2.5 border-l-[3px]",
++                            course.code === '—' 
++                              ? 'bg-amber-50 dark:bg-amber-950/30 border-l-amber-400' 
++                              : 'bg-muted/40 border-l-blue-500'
++                          )}>
++                            <div className={cn(
++                              "font-semibold text-sm",
++                              course.code === '—' ? 'text-amber-700 dark:text-amber-400' : ''
++                            )}>
++                              {course.code}
++                            </div>
++                            {courseInfo && (
++                              <div className="text-xs text-muted-foreground mt-0.5 leading-snug">
++                                {courseInfo.title}
++                              </div>
++                            )}
++                            {!courseInfo && course.category && (
++                              <div className="text-xs text-muted-foreground mt-0.5">
++                                {course.category}
++                              </div>
++                            )}
+                           </div>
+-                        )}
+-                      </div>
+-                    ))
+-                  ) : (
+-                    <div className="text-xs text-muted-foreground italic py-2 px-1">No courses</div>
+-                  )}
++                        )
++                      })
++                    ) : (
++                      <div className="text-xs text-muted-foreground italic py-2 px-1">No courses</div>
++                    )}
++                  </div>
+                 </div>
+-              </div>
+-            ))}
++              )
++            })}
+           </div>
+ 
+           <p className="text-xs text-muted-foreground">
+-- 
+2.43.0
+
+
+From 2d07866c1bd63d4aa8785883eaff410b1faad7f9 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 03:21:45 +0000
+Subject: [PATCH 4/5] =?UTF-8?q?refine:=20simplify=20Review=20Actions=20?=
+ =?UTF-8?q?=E2=80=94=20appointment=20first,=20collapse=20exports,=20replac?=
+ =?UTF-8?q?e=20alert?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Reordered: Appointment CTA → Notes → Submit → Export options
+- Appointment scheduling is now the lead element (larger, prominent)
+- 'Submit Plan to Advisor' is a single full-width primary button
+- Secondary exports (Preview PDF, Print, Save CSV) collapsed into
+  'More export options' expandable section
+- Replaced browser alert() with a styled Dialog showing the filename
+  and a clear 'Open Email' action button
+- Removed unused category computation (was duplicated from ReviewSummaryStep)
+- Notes label downsized from text-lg to text-sm for better hierarchy
+---
+ public/advising-manifest.json                 |   2 +-
+ .../wizard/steps/ReviewActionsStep.tsx        | 247 +++++++++---------
+ 2 files changed, 125 insertions(+), 124 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index c84c8e4..0ea1b89 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-17T03:03:28.679Z",
++  "lastUpdated": "2026-02-17T03:21:14.389Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/components/wizard/steps/ReviewActionsStep.tsx b/src/components/wizard/steps/ReviewActionsStep.tsx
+index 9c99c5e..940167f 100644
+--- a/src/components/wizard/steps/ReviewActionsStep.tsx
++++ b/src/components/wizard/steps/ReviewActionsStep.tsx
+@@ -7,7 +7,7 @@ import {
+   DialogHeader,
+   DialogTitle,
+ } from '@/components/ui/dialog'
+-import { Eye, Printer, Download, Calendar, Mail, Send } from 'lucide-react'
++import { Eye, Printer, Download, Calendar, Mail, Send, ChevronDown, ChevronUp } from 'lucide-react'
+ import type { StudentData } from '@/types'
+ import { useRequirements } from '@/hooks/useRequirements'
+ import { generatePdfBlob, downloadPdf, printPdf, exportToCSV } from '@/services/export'
+@@ -21,6 +21,9 @@ interface ReviewActionsStepProps {
+ export function ReviewActionsStep({ studentData, generalElectives, updateStudentData }: ReviewActionsStepProps) {
+   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+   const [previewFilename, setPreviewFilename] = useState<string>('')
++  const [showExportOptions, setShowExportOptions] = useState(false)
++  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
++  const [submitFilename, setSubmitFilename] = useState('')
+   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
+   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+ 
+@@ -39,55 +42,6 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
+     ? (degreeProgress?.completedHours ?? 0)
+     : Math.min(totalCompletedHours, minorTotalHours)
+ 
+-  // Organize courses by category for email
+-  const completedByCategory: Record<string, string[]> = {}
+-  const scheduledByCategory: Record<string, string[]> = {}
+-  const neededCategories: { category: string; name: string; remaining: number }[] = []
+-  const assignedScheduledCourses = new Set<string>()
+-
+-  if (degreeProgress) {
+-    const sortedCategories = [...degreeProgress.categories].sort((a, b) => {
+-      if (a.id === 'generalElectives') return 1
+-      if (b.id === 'generalElectives') return -1
+-      const aIsElective = a.id === 'dcElective' || a.id === 'daElective'
+-      const bIsElective = b.id === 'dcElective' || b.id === 'daElective'
+-      if (aIsElective && !bIsElective) return 1
+-      if (!aIsElective && bIsElective) return -1
+-      return 0
+-    })
+-
+-    for (const cat of sortedCategories) {
+-      if (cat.completedCourses.length > 0) {
+-        completedByCategory[cat.name] = cat.completedCourses
+-      }
+-
+-      const isAlreadySatisfied = cat.completed >= cat.required
+-
+-      if (!isAlreadySatisfied) {
+-        const scheduledInCat = studentData.scheduledCourses.filter((code) =>
+-          cat.courses.includes(code) && !assignedScheduledCourses.has(code)
+-        )
+-        if (scheduledInCat.length > 0) {
+-          scheduledByCategory[cat.name] = scheduledInCat
+-          scheduledInCat.forEach((code) => {
+-            assignedScheduledCourses.add(code)
+-          })
+-        }
+-
+-        const totalFilled = cat.completed + scheduledInCat.length
+-        if (totalFilled < cat.required) {
+-          const remaining = cat.required - totalFilled
+-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
+-        }
+-      } else {
+-        if (cat.completed < cat.required) {
+-          const remaining = cat.required - cat.completed
+-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
+-        }
+-      }
+-    }
+-  }
+-
+   // Cleanup blob URL to prevent memory leaks
+   const revokePreviewUrl = useCallback(() => {
+     if (previewUrl) {
+@@ -96,7 +50,6 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
+   }, [previewUrl])
+ 
+   const handlePreview = useCallback(() => {
+-    // Revoke previous URL before creating new one
+     revokePreviewUrl()
+     const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
+     setPreviewUrl(blobUrl)
+@@ -126,11 +79,11 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
+   const handleSubmitToAdvisor = () => {
+     // Download the CSV file first
+     const filename = exportToCSV({ ...studentData, generalElectives })
++    setSubmitFilename(filename)
++    setShowSubmitConfirm(true)
++  }
+ 
+-    // Show alert with instructions
+-    alert(`Your advising plan has been downloaded as:\n\n${filename}\n\nAn email will now open. Please attach the downloaded file before sending.`)
+-
+-    // Build a simple email body (advisor-facing)
++  const handleOpenEmail = () => {
+     const date = new Date().toLocaleDateString()
+     const degreeLabel = studentData.degreeType === 'major' ? 'Major' : 'Minor'
+     const progressHours = selectedDegreeType === 'major' ? majorHours : minorHours
+@@ -155,6 +108,7 @@ Submitted via DCDA Advisor Mobile`
+ 
+     const mailtoUrl = `mailto:c.rode@tcu.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+     window.location.href = mailtoUrl
++    setShowSubmitConfirm(false)
+   }
+ 
+   return (
+@@ -162,13 +116,36 @@ Submitted via DCDA Advisor Mobile`
+       <div>
+         <h2 className="text-xl font-semibold mb-2">Save & Submit</h2>
+         <p className="text-sm text-muted-foreground">
+-          Add notes, save your plan, and schedule an advising appointment.
++          Schedule an appointment, add notes, and submit your plan.
+         </p>
+       </div>
+ 
+-      {/* Notes Section */}
++      {/* 1. Make Appointment — primary CTA, first */}
++      <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
++        <h3 className="font-semibold text-primary text-lg">Schedule an Appointment</h3>
++        <p className="text-sm text-muted-foreground">
++          Meet with your advisor to review your plan and make sure you're on track.
++        </p>
++        <Button
++          asChild
++          className="w-full"
++          size="lg"
++        >
++          <a
++            href="https://calendly.com/c-rode/appointments"
++            target="_blank"
++            rel="noopener noreferrer"
++            className="flex items-center justify-center gap-2"
++          >
++            <Calendar className="size-5" />
++            Schedule Advising Appointment
++          </a>
++        </Button>
++      </div>
++
++      {/* 2. Notes Section */}
+       <div className="space-y-3">
+-        <label htmlFor="notes" className="text-lg font-semibold block px-1">
++        <label htmlFor="notes" className="text-sm font-semibold block px-1">
+           Notes or Questions for Advisor
+         </label>
+         <Textarea 
+@@ -180,79 +157,103 @@ Submitted via DCDA Advisor Mobile`
+         />
+       </div>
+ 
+-      {/* Export Buttons - 2x2 Grid */}
+-      <div className="grid grid-cols-2 gap-3 pt-4">
+-        <Button
+-          variant="outline"
+-          className="flex-col h-auto py-4 gap-2"
+-          onClick={handlePreview}
+-        >
+-          <Eye className="size-5" />
+-          <span className="text-sm">Preview PDF</span>
+-        </Button>
+-
+-        {!isMobile && (
+-          <Button
+-            variant="outline"
+-            className="flex-col h-auto py-4 gap-2"
+-            onClick={handlePrint}
+-          >
+-            <Printer className="size-5" />
+-            <span className="text-sm">Print PDF</span>
+-          </Button>
+-        )}
++      {/* 3. Submit — single prominent action */}
++      <Button
++        className="w-full gap-2"
++        size="lg"
++        onClick={handleSubmitToAdvisor}
++      >
++        <Send className="size-5" />
++        Submit Plan to Advisor
++      </Button>
++      <p className="text-xs text-muted-foreground text-center -mt-3">
++        Downloads your plan as CSV and opens an email to your advisor.
++      </p>
+ 
+-        <Button
+-          variant="outline"
+-          className="flex-col h-auto py-4 gap-2"
+-          onClick={handleDownload}
++      {/* 4. More export options — collapsed */}
++      <div className="border rounded-xl overflow-hidden">
++        <button
++          type="button"
++          onClick={() => setShowExportOptions(!showExportOptions)}
++          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+         >
+-          <Download className="size-5" />
+-          <span className="text-sm">Save CSV</span>
+-        </Button>
++          <span>More export options</span>
++          {showExportOptions
++            ? <ChevronUp className="size-4" />
++            : <ChevronDown className="size-4" />
++          }
++        </button>
++        {showExportOptions && (
++          <div className="grid grid-cols-2 gap-3 p-4 pt-0 border-t">
++            <Button
++              variant="outline"
++              className="flex-col h-auto py-3 gap-1.5"
++              onClick={handlePreview}
++            >
++              <Eye className="size-4" />
++              <span className="text-xs">Preview PDF</span>
++            </Button>
+ 
+-        <Button
+-          variant="default"
+-          className="flex-col h-auto py-4 gap-2"
+-          onClick={handleSubmitToAdvisor}
+-        >
+-          <Send className="size-5" />
+-          <span className="text-sm">Submit</span>
+-        </Button>
+-      </div>
++            {!isMobile && (
++              <Button
++                variant="outline"
++                className="flex-col h-auto py-3 gap-1.5"
++                onClick={handlePrint}
++              >
++                <Printer className="size-4" />
++                <span className="text-xs">Print PDF</span>
++              </Button>
++            )}
+ 
+-      <p className="text-xs text-muted-foreground text-center">
+-        Submit sends your advising record via email. You may also bring a printed copy to your appointment.
+-      </p>
++            <Button
++              variant="outline"
++              className="flex-col h-auto py-3 gap-1.5"
++              onClick={handleDownload}
++            >
++              <Download className="size-4" />
++              <span className="text-xs">Save CSV</span>
++            </Button>
++          </div>
++        )}
++      </div>
+ 
+-      {/* Make Appointment */}
+-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+-        <h3 className="font-semibold text-primary">Make an Appointment</h3>
+-        <p className="text-sm text-muted-foreground">
+-          Schedule an advising appointment to review your plan together and ensure you're on track.
++      {/* Tip */}
++      <div className="flex items-start gap-3 text-sm text-muted-foreground px-1">
++        <Mail className="size-4 mt-0.5 flex-shrink-0" />
++        <p>
++          <strong>Tip:</strong> Save your PDF or CSV and email it before your meeting so your advisor can review it in advance.
+         </p>
+-        <div className="flex items-start gap-3 text-sm text-muted-foreground">
+-          <Mail className="size-4 mt-0.5 flex-shrink-0" />
+-          <p>
+-            <strong>Tip:</strong> Save your PDF or CSV and email it before your meeting so your advisor can review it in advance.
+-          </p>
+-        </div>
+-        <Button
+-          asChild
+-          className="w-full"
+-        >
+-          <a
+-            href="https://calendly.com/c-rode/appointments"
+-            target="_blank"
+-            rel="noopener noreferrer"
+-            className="flex items-center justify-center gap-2"
+-          >
+-            <Calendar className="size-4" />
+-            Schedule Advising Appointment
+-          </a>
+-        </Button>
+       </div>
+ 
++      {/* Submit Confirmation Dialog — replaces alert() */}
++      <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
++        <DialogContent className="max-w-sm">
++          <DialogHeader>
++            <DialogTitle>Plan Downloaded</DialogTitle>
++          </DialogHeader>
++          <div className="space-y-4">
++            <p className="text-sm text-muted-foreground">
++              Your advising plan has been saved as:
++            </p>
++            <div className="bg-muted rounded-lg px-3 py-2 text-sm font-mono break-all">
++              {submitFilename}
++            </div>
++            <p className="text-sm text-muted-foreground">
++              An email will open next. Please <strong>attach the downloaded file</strong> before sending.
++            </p>
++            <div className="flex gap-2">
++              <Button variant="secondary" onClick={() => setShowSubmitConfirm(false)} className="flex-1">
++                Cancel
++              </Button>
++              <Button onClick={handleOpenEmail} className="flex-1 gap-2">
++                <Mail className="size-4" />
++                Open Email
++              </Button>
++            </div>
++          </div>
++        </DialogContent>
++      </Dialog>
++
+       {/* PDF Preview Dialog */}
+       <Dialog open={!!previewUrl} onOpenChange={(open) => !open && handleClosePreview()}>
+         <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+-- 
+2.43.0
+
+
+From 94bfd1383f386d31106dd28da04b998bfe12a09e Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 03:28:09 +0000
+Subject: [PATCH 5/5] refine: blue schedule phase + step transition animation
+ (#5 & #6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Schedule step differentiation:
+- Blue semester banner at top of every schedule screen ('Scheduling for Spring 2026')
+- Cards use blue accent bar, blue code chips, blue hover states
+- Selected state is blue-50 bg instead of purple — instant visual shift
+- Skip button uses blue selected state to match
+
+Step transition animation:
+- Content area wraps children in keyed div with fade-in-up animation
+- 250ms ease-out, 8px translateY — subtle but noticeable
+- Triggers on every step change via stepKey prop
+- CSS keyframes in index.css (no JS animation library needed)
+---
+ public/advising-manifest.json                |  2 +-
+ src/App.tsx                                  |  1 +
+ src/components/wizard/WizardShell.tsx        | 13 +++-
+ src/components/wizard/steps/ScheduleStep.tsx | 67 +++++++++++++++-----
+ src/index.css                                | 16 +++++
+ 5 files changed, 80 insertions(+), 19 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index 0ea1b89..5aad978 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-17T03:21:14.389Z",
++  "lastUpdated": "2026-02-17T03:27:44.605Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/App.tsx b/src/App.tsx
+index dd6f8bc..292ad7c 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -789,6 +789,7 @@ function App() {
+         currentPart={wizard.part}
+         currentStepInPart={wizard.currentStepInPart}
+         phases={wizard.phases}
++        stepKey={wizard.currentStep.id}
+         canGoBack={wizard.canGoBack}
+         canGoNext={wizard.canGoNext}
+         onBack={wizard.goBack}
+diff --git a/src/components/wizard/WizardShell.tsx b/src/components/wizard/WizardShell.tsx
+index 00b8907..28a0066 100644
+--- a/src/components/wizard/WizardShell.tsx
++++ b/src/components/wizard/WizardShell.tsx
+@@ -18,6 +18,9 @@ interface WizardShellProps {
+   currentStepInPart: number
+   phases: PhaseInfo[]
+ 
++  // Step identity (for transition animation)
++  stepKey?: string
++
+   // Content
+   children: ReactNode
+ 
+@@ -36,6 +39,7 @@ export function WizardShell({
+   currentPart,
+   currentStepInPart,
+   phases,
++  stepKey,
+   children,
+   canGoBack,
+   onBack,
+@@ -78,9 +82,14 @@ export function WizardShell({
+         phases={phases}
+       />
+ 
+-      {/* Content */}
++      {/* Content — fade+slide on step change */}
+       <main className="flex-1 overflow-y-auto px-5 py-6 pb-28">
+-        {children}
++        <div
++          key={stepKey}
++          className="animate-fade-in-up"
++        >
++          {children}
++        </div>
+       </main>
+ 
+       {/* Bottom Navigation */}
+diff --git a/src/components/wizard/steps/ScheduleStep.tsx b/src/components/wizard/steps/ScheduleStep.tsx
+index 2fb25d9..e24392f 100644
+--- a/src/components/wizard/steps/ScheduleStep.tsx
++++ b/src/components/wizard/steps/ScheduleStep.tsx
+@@ -4,7 +4,16 @@ import { Checkbox } from '@/components/ui/checkbox'
+ import { cn } from '@/lib/utils'
+ import type { RequirementCategoryId } from '@/types'
+ import { getOfferedCoursesForCategory, categoryNames, getEnrollmentWarning, getNextSemesterTerm } from '@/services/courses'
+-import { AlertTriangle } from 'lucide-react'
++import { AlertTriangle, CalendarDays } from 'lucide-react'
++
++// Blue accent classes for schedule phase (vs purple for history)
++const scheduleAccent = {
++  border: 'border-blue-500',
++  bg: 'bg-blue-500',
++  selectedCard: 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 shadow-sm shadow-blue-500/10',
++  chip: 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40',
++  skipSelected: 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-600',
++}
+ 
+ interface ScheduleStepProps {
+   categoryId: RequirementCategoryId
+@@ -55,12 +64,25 @@ export function ScheduleStep({
+   if (multiSelect) {
+     return (
+       <div className="space-y-6">
++        {/* Semester context banner */}
++        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-xl">
++          <CalendarDays className="size-5 text-blue-600 dark:text-blue-400 shrink-0" />
++          <div>
++            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
++              Scheduling for {getNextSemesterTerm()}
++            </div>
++            <div className="text-xs text-blue-600/70 dark:text-blue-400/70">
++              Choose courses to take next semester
++            </div>
++          </div>
++        </div>
++
+         <div>
+           <h2 className="text-xl font-semibold mb-2">
+-            Which {categoryName} courses for {getNextSemesterTerm()}?
++            Which {categoryName} courses?
+           </h2>
+           <p className="text-sm text-muted-foreground">
+-            Select one or more courses to schedule for next semester. You can select multiple General Electives.
++            Select one or more courses to schedule. You can select multiple General Electives.
+           </p>
+         </div>
+ 
+@@ -76,14 +98,14 @@ export function ScheduleStep({
+                   className={cn(
+                     "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+                     isSelected
+-                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+-                      : "border-border bg-card hover:border-primary/50"
++                      ? scheduleAccent.selectedCard
++                      : "border-border bg-card hover:border-blue-300 dark:hover:border-blue-700"
+                   )}
+                 >
+-                  {/* Left accent bar */}
++                  {/* Left accent bar — blue for schedule */}
+                   <div className={cn(
+                     "w-1 shrink-0 transition-colors",
+-                    isSelected ? "bg-primary" : "bg-transparent"
++                    isSelected ? scheduleAccent.bg : "bg-transparent"
+                   )} />
+                   <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
+                     <Checkbox
+@@ -99,7 +121,7 @@ export function ScheduleStep({
+                     />
+                     <div className="flex-1">
+                       <div className="mb-1">
+-                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                        <span className={cn("text-xs font-semibold px-2 py-0.5 rounded", scheduleAccent.chip)}>
+                           {course.code}
+                         </span>
+                       </div>
+@@ -123,7 +145,7 @@ export function ScheduleStep({
+               className={cn(
+                 "w-full flex items-center justify-center p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
+                 isSkipped && selectedCourses.length === 0
+-                  ? "border-primary bg-accent text-primary"
++                  ? scheduleAccent.skipSelected
+                   : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+               )}
+             >
+@@ -158,9 +180,22 @@ export function ScheduleStep({
+ 
+   return (
+     <div className="space-y-6">
++      {/* Semester context banner */}
++      <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-xl">
++        <CalendarDays className="size-5 text-blue-600 dark:text-blue-400 shrink-0" />
++        <div>
++          <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
++            Scheduling for {getNextSemesterTerm()}
++          </div>
++          <div className="text-xs text-blue-600/70 dark:text-blue-400/70">
++            Choose a course to take next semester
++          </div>
++        </div>
++      </div>
++
+       <div>
+         <h2 className="text-xl font-semibold mb-2">
+-          Which {categoryName} course for {getNextSemesterTerm()}?
++          Which {categoryName} course?
+         </h2>
+         <p className="text-sm text-muted-foreground">
+           These courses are offered next semester and fulfill your {categoryName} requirement.
+@@ -187,20 +222,20 @@ export function ScheduleStep({
+                 className={cn(
+                   "flex items-stretch rounded-xl border-2 cursor-pointer transition-all overflow-hidden",
+                   selectedCourse === course.code && !isSkipped
+-                    ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+-                    : "border-border bg-card hover:border-primary/50"
++                    ? scheduleAccent.selectedCard
++                    : "border-border bg-card hover:border-blue-300 dark:hover:border-blue-700"
+                 )}
+               >
+-                {/* Left accent bar */}
++                {/* Left accent bar — blue for schedule */}
+                 <div className={cn(
+                   "w-1 shrink-0 transition-colors",
+-                  selectedCourse === course.code && !isSkipped ? "bg-primary" : "bg-transparent"
++                  selectedCourse === course.code && !isSkipped ? scheduleAccent.bg : "bg-transparent"
+                 )} />
+                 <div className="flex items-start gap-3 p-4 flex-1 min-w-0">
+                   <RadioGroupItem value={course.code} className="mt-1" />
+                   <div className="flex-1">
+                     <div className="mb-1">
+-                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
++                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded", scheduleAccent.chip)}>
+                         {course.code}
+                       </span>
+                     </div>
+@@ -222,7 +257,7 @@ export function ScheduleStep({
+             className={cn(
+               "flex items-center justify-center p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all",
+               isSkipped
+-                ? "border-primary bg-accent text-primary"
++                ? scheduleAccent.skipSelected
+                 : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+             )}
+           >
+diff --git a/src/index.css b/src/index.css
+index d3d3dc8..5401b6b 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -93,3 +93,19 @@ html, body {
+     padding-bottom: env(safe-area-inset-bottom);
+   }
+ }
++
++/* Step transition animation */
++@keyframes fade-in-up {
++  from {
++    opacity: 0;
++    transform: translateY(8px);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0);
++  }
++}
++
++.animate-fade-in-up {
++  animation: fade-in-up 0.25s ease-out;
++}
+-- 
+2.43.0
+

@@ -1,0 +1,39 @@
+From 86f33a0574ea9da44cd92d7939ffcbb2a2ed9f79 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 17 Feb 2026 03:47:18 +0000
+Subject: [PATCH] refine: soften ProgressHero gradient to subtle primary range
+
+---
+ public/advising-manifest.json                     | 2 +-
+ src/components/wizard/steps/ReviewSummaryStep.tsx | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/public/advising-manifest.json b/public/advising-manifest.json
+index 5aad978..af9cf90 100644
+--- a/public/advising-manifest.json
++++ b/public/advising-manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "manifestVersion": "1.0",
+   "department": "Digital Culture and Data Analytics",
+-  "lastUpdated": "2026-02-17T03:27:44.605Z",
++  "lastUpdated": "2026-02-17T03:46:54.614Z",
+   "wizardUrl": "https://dcda-advisor-mobile.web.app",
+   "programs": [
+     {
+diff --git a/src/components/wizard/steps/ReviewSummaryStep.tsx b/src/components/wizard/steps/ReviewSummaryStep.tsx
+index 66f9f1d..e9de1a4 100644
+--- a/src/components/wizard/steps/ReviewSummaryStep.tsx
++++ b/src/components/wizard/steps/ReviewSummaryStep.tsx
+@@ -21,7 +21,7 @@ function ProgressHero({ hours, totalHours, degreeLabel, altHours, altTotalHours,
+   const altPercent = altHours && altTotalHours ? Math.min(100, Math.round((altHours / altTotalHours) * 100)) : 0
+   
+   return (
+-    <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-5 text-primary-foreground">
++    <div className="bg-gradient-to-br from-primary to-primary/85 rounded-2xl p-5 text-primary-foreground">
+       <div className="flex items-center gap-4">
+         <div className="text-5xl font-extrabold leading-none tabular-nums">
+           {percent}<span className="text-2xl font-semibold">%</span>
+-- 
+2.43.0
+
