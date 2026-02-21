@@ -12,7 +12,6 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "upload:courses": "node scripts/uploadCourses.js",
     "check-schema": "node scripts/check-schema-version.js"
   },
   "dependencies": {
@@ -25,8 +24,6 @@
     "ajv-formats": "^3.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
-    "firebase": "^12.8.0",
     "jspdf": "^4.0.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
