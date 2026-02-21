@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf'
-import type { StudentData, Course, SpecialCredit, RequirementCategoryId, FlexibleCourseCategory } from '@/types'
+import type { StudentData, Course, SpecialCredit, FlexibleCourseCategory } from '@/types'
 import { FLEXIBLE_COURSES } from '@/types'
 import { getCapstoneTargetSemester, buildSemesterPlan, getNextSemesterTerm } from './courses'
 import coursesData from '../../data/courses.json'
@@ -83,108 +83,10 @@ export function exportToCSV(studentData: StudentData): string {
   return filename
 }
 
-// CSV Import - restores student data from a previously exported file
-export function parseCSVImport(csvContent: string): Partial<StudentData> | null {
-  try {
-    const lines = csvContent.trim().split('\n')
-
-    // Verify header
-    if (!lines[0]?.startsWith('DCDA_')) {
-      console.error('Invalid CSV format: missing header')
-      return null
-    }
-
-    const data: Partial<StudentData> = {
-      completedCourses: [],
-      scheduledCourses: [],
-      specialCredits: [],
-    }
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i]
-      const commaIndex = line.indexOf(',')
-      if (commaIndex === -1) continue
-
-      const key = line.substring(0, commaIndex)
-      const value = unescapeCSV(line.substring(commaIndex + 1))
-
-      switch (key) {
-        case 'name':
-          data.name = value
-          break
-        case 'email':
-          data.email = value
-          break
-        case 'degreeType':
-          if (value === 'major' || value === 'minor') {
-            data.degreeType = value
-          }
-          break
-        case 'expectedGraduation':
-          data.expectedGraduation = value || null
-          break
-        case 'completedCourses':
-          data.completedCourses = value ? value.split(';').filter(Boolean) : []
-          break
-        case 'scheduledCourses':
-          data.scheduledCourses = value ? value.split(';').filter(Boolean) : []
-          break
-        case 'plannedCourses': // Backwards compatibility with chat version
-          data.scheduledCourses = value ? value.split(';').filter(Boolean) : []
-          break
-        case 'specialCredits':
-        case 'specialNotes': // Backwards compatibility
-          if (value) {
-            try {
-              const creditsData = JSON.parse(value) as { type: SpecialCredit['type']; description: string; countsAs: RequirementCategoryId }[]
-              data.specialCredits = creditsData.map(c => ({
-                id: crypto.randomUUID(),
-                type: c.type,
-                description: c.description,
-                countsAs: c.countsAs,
-              }))
-            } catch {
-              console.error('Failed to parse special credits')
-            }
-          }
-          break
-        case 'courseCategories':
-          if (value) {
-            try {
-              data.courseCategories = JSON.parse(value)
-            } catch {
-              console.error('Failed to parse course categories')
-            }
-          }
-          break
-        case 'generalElectives':
-          data.generalElectives = value ? value.split(';').filter(Boolean) : []
-          break
-        case 'notes':
-          data.notes = value
-          break
-      }
-    }
-
-    return data
-  } catch (error) {
-    console.error('CSV parse error:', error)
-    return null
-  }
-}
-
 // Helper to escape CSV values
 function escapeCSV(value: string): string {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
     return `"${value.replace(/"/g, '""')}"`
-  }
-  return value
-}
-
-// Helper to unescape CSV values
-function unescapeCSV(value: string): string {
-  if (value.startsWith('"') && value.endsWith('"')) {
-    return value.slice(1, -1).replace(/""/g, '"')
   }
   return value
 }

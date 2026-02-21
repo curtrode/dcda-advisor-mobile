@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useStudentData } from '@/hooks/useStudentData'
 import { useWizardFlow } from '@/hooks/useWizardFlow'
 import {
@@ -16,7 +16,7 @@ import {
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { getRequiredCategoryCourses } from '@/services/courses'
 import { buildSandraContext } from '@/lib/buildSandraContext'
-import type { RequirementCategoryId, StudentData } from '@/types'
+import type { RequirementCategoryId } from '@/types'
 import requirementsData from '../data/requirements.json'
 
 // Track selections per category for Part 1
@@ -94,9 +94,6 @@ function App() {
 
   // Track skipped categories in Part 2
   const [skippedCategories, setSkippedCategories] = useState<Set<RequirementCategoryId>>(new Set())
-
-  // Track pending navigation after import
-  const [pendingImportNav, setPendingImportNav] = useState<'plan' | 'review' | null>(null)
 
   // All completed courses (for exclusion logic)
   const allCompletedCourses = useMemo(() => {
@@ -403,165 +400,13 @@ function App() {
     setSkippedCategories(new Set())
   }, [resetStudentData, wizard])
 
-  // Handle CSV import
-  const handleImport = useCallback((data: Partial<StudentData>) => {
-    const degreeType = data.degreeType || 'major'
-
-    // Update student data with imported values
-    updateStudentData({
-      name: data.name || '',
-      degreeType,
-      expectedGraduation: data.expectedGraduation || null,
-      completedCourses: data.completedCourses || [],
-      scheduledCourses: data.scheduledCourses || [],
-      specialCredits: data.specialCredits || [],
-      courseCategories: data.courseCategories,
-      generalElectives: data.generalElectives,
-    })
-
-    // Populate category selections and not-yet selections from imported data
-    const newSelections: CategorySelections = {
-      intro: null,
-      statistics: null,
-      coding: null,
-      mmAuthoring: null,
-      dcElectives: [],
-      daElectives: [],
-      generalElectives: data.generalElectives || [],
-    }
-
-    // Default: assume Not Yet for all, then mark false if found
-    const newNotYet: NotYetSelections = {
-      intro: true,
-      statistics: true,
-      coding: true,
-      mmAuthoring: true,
-      capstone: false, // Auto-handled
-      dcElective: true,
-      daElective: true,
-      generalElectives: false,
-    }
-
-    if (data.completedCourses) {
-      // Get courses for each required category
-      const introCourses = getRequiredCategoryCourses('intro', degreeType)
-      const statsCourses = getRequiredCategoryCourses('statistics', degreeType)
-      const codingCourses = getRequiredCategoryCourses('coding', degreeType)
-      const mmCourses = getRequiredCategoryCourses('mmAuthoring', degreeType)
-      const dcCourses = getRequiredCategoryCourses('dcElective', degreeType)
-      const daCourses = getRequiredCategoryCourses('daElective', degreeType)
-
-      // Match completed courses to required categories
-      for (const code of data.completedCourses) {
-        if (introCourses.includes(code) && !newSelections.intro) {
-          newSelections.intro = code
-          newNotYet.intro = false
-        } else if (statsCourses.includes(code) && !newSelections.statistics) {
-          newSelections.statistics = code
-          newNotYet.statistics = false
-        } else if (codingCourses.includes(code) && !newSelections.coding) {
-          newSelections.coding = code
-          newNotYet.coding = false
-        } else if (mmCourses.includes(code) && !newSelections.mmAuthoring) {
-          newSelections.mmAuthoring = code
-          newNotYet.mmAuthoring = false
-        } else if (dcCourses.includes(code)) {
-          newSelections.dcElectives.push(code)
-          newNotYet.dcElective = false // At least one taken
-        } else if (daCourses.includes(code)) {
-          newSelections.daElectives.push(code)
-          newNotYet.daElective = false // At least one taken
-        }
-      }
-    }
-
-    setCategorySelections(newSelections)
-    setNotYetSelections(newNotYet)
-
-    // Initialize scheduled selections from imported data
-    const newScheduledSelections: ScheduledSelections = {
-      intro: null,
-      statistics: null,
-      coding: null,
-      mmAuthoring: null,
-      capstone: null,
-      dcElective: null,
-      daElective: null,
-      generalElectives: [],
-    }
-
-    if (data.scheduledCourses && data.scheduledCourses.length > 0) {
-      const introCourses = getRequiredCategoryCourses('intro', degreeType)
-      const statsCourses = getRequiredCategoryCourses('statistics', degreeType)
-      const codingCourses = getRequiredCategoryCourses('coding', degreeType)
-      const mmCourses = getRequiredCategoryCourses('mmAuthoring', degreeType)
-      const dcCourses = getRequiredCategoryCourses('dcElective', degreeType)
-      const daCourses = getRequiredCategoryCourses('daElective', degreeType)
-      const capstoneCourses = getRequiredCategoryCourses('capstone', degreeType)
-
-      for (const code of data.scheduledCourses) {
-        if (introCourses.includes(code) && !newScheduledSelections.intro) {
-          newScheduledSelections.intro = code
-        } else if (statsCourses.includes(code) && !newScheduledSelections.statistics) {
-          newScheduledSelections.statistics = code
-        } else if (codingCourses.includes(code) && !newScheduledSelections.coding) {
-          newScheduledSelections.coding = code
-        } else if (mmCourses.includes(code) && !newScheduledSelections.mmAuthoring) {
-          newScheduledSelections.mmAuthoring = code
-        } else if (capstoneCourses.includes(code) && !newScheduledSelections.capstone) {
-          newScheduledSelections.capstone = code
-        } else if (dcCourses.includes(code) && !newScheduledSelections.dcElective) {
-          newScheduledSelections.dcElective = code
-        } else if (daCourses.includes(code) && !newScheduledSelections.daElective) {
-          newScheduledSelections.daElective = code
-        } else {
-          // Treat as general elective
-          newScheduledSelections.generalElectives.push(code)
-        }
-      }
-    }
-
-    setScheduledSelections(newScheduledSelections)
-
-    // Calculate Unmet Categories immediately
-    const unmet = calculateUnmetCategories(degreeType, newNotYet)
-    wizard.setUnmetCategories(unmet)
-
-    // Decide where to send user:
-    // If there are unmet requirements, send to Plan phase (Transition step)
-    // Otherwise, send to Review (Completed)
-    setPendingImportNav(unmet.length > 0 ? 'plan' : 'review')
-
-  }, [updateStudentData, wizard, calculateUnmetCategories])
-
-  // Effect to handle navigation after import (once wizard steps have updated)
-  useEffect(() => {
-    if (pendingImportNav) {
-      if (pendingImportNav === 'plan') {
-         // Wait for unmet categories to update before navigating
-         if (wizard.unmetCategories.length > 0) {
-            if (wizard.goToStepId) {
-               wizard.goToStepId('transition')
-               setTimeout(() => setPendingImportNav(null), 0)
-            }
-         }
-      } else {
-         // Review doesn't depend on unmet categories
-         if (wizard.goToStepId) {
-            wizard.goToStepId('review')
-            setTimeout(() => setPendingImportNav(null), 0)
-         }
-      }
-    }
-  }, [pendingImportNav, wizard])
-
   // Render current step content
   const renderStep = () => {
     const { currentStep } = wizard
 
     switch (currentStep.id) {
       case 'welcome':
-        return <WelcomeStep onImport={handleImport} onNext={handleNext} />
+        return <WelcomeStep />
 
       case 'name':
         return (

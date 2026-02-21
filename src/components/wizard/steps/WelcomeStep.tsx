@@ -1,51 +1,16 @@
-import { useRef, useState } from 'react'
-import { Upload, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-
-// Step icons from public folder
-const BASE_URL = import.meta.env.BASE_URL
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { StudentData } from '@/types'
-import { parseCSVImport } from '@/services/export'
 
-interface WelcomeStepProps {
-  onImport?: (data: Partial<StudentData>) => void
-  onNext?: () => void
-}
+// Step icons from public folder
+const BASE_URL = import.meta.env.BASE_URL
 
-export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export function WelcomeStep() {
   const [showFerpa, setShowFerpa] = useState(false)
-  const [importError, setImportError] = useState<string | null>(null)
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !onImport) return
-    setImportError(null)
-
-    try {
-      const content = await file.text()
-      const data = parseCSVImport(content)
-      if (data) {
-        onImport(data)
-      } else {
-        setImportError('Invalid file format. Please select a DCDA CSV export file.')
-      }
-    } catch (error) {
-      console.error('Import error:', error)
-      setImportError('Failed to import file. Please try again.')
-    }
-
-    // Reset input so the same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -101,50 +66,6 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
           </div>
           <img src={`${BASE_URL}submit_icon.png`} alt="" className="w-6 h-6 shrink-0 opacity-50" />
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="bg-muted/50 border rounded-lg p-3 space-y-3">
-        {onImport && (
-          <>
-            <p className="text-xs text-muted-foreground">
-              Returning? Pick up where you left off:
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </>
-        )}
-        <div className="flex gap-2">
-          {onImport && (
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Import
-            </Button>
-          )}
-          {onNext && (
-            <Button
-              className="flex-1"
-              onClick={onNext}
-            >
-              {onImport ? 'Start Fresh' : 'Get Started'}
-            </Button>
-          )}
-        </div>
-        {importError && (
-          <div role="alert" className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
-            <AlertTriangle className="size-4 shrink-0" />
-            <span>{importError}</span>
-          </div>
-        )}
       </div>
 
       {/* Inline info links */}
