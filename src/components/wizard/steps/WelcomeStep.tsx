@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Upload } from 'lucide-react'
+import { Upload, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 // Step icons from public folder
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { StudentData } from '@/types'
+import { parseCSVImport } from '@/services/export'
 
 interface WelcomeStepProps {
   onImport?: (data: Partial<StudentData>) => void
@@ -20,23 +21,24 @@ interface WelcomeStepProps {
 export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showFerpa, setShowFerpa] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !onImport) return
+    setImportError(null)
 
     try {
       const content = await file.text()
-      const { parseCSVImport } = await import('@/services/export')
       const data = parseCSVImport(content)
       if (data) {
         onImport(data)
       } else {
-        alert('Invalid file format. Please select a DCDA CSV export file.')
+        setImportError('Invalid file format. Please select a DCDA CSV export file.')
       }
     } catch (error) {
       console.error('Import error:', error)
-      alert('Failed to import file. Please try again.')
+      setImportError('Failed to import file. Please try again.')
     }
 
     // Reset input so the same file can be selected again
@@ -137,6 +139,12 @@ export function WelcomeStep({ onImport, onNext }: WelcomeStepProps) {
             </Button>
           )}
         </div>
+        {importError && (
+          <div role="alert" className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
+            <AlertTriangle className="size-4 shrink-0" />
+            <span>{importError}</span>
+          </div>
+        )}
       </div>
 
       {/* Inline info links */}

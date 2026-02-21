@@ -127,7 +127,7 @@ export function ScheduleStep({
                       </div>
                       <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
                       {warning && (
-                        <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
+                        <div role="alert" className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
                           <AlertTriangle className="size-3.5 shrink-0" />
                           <span>{warning}</span>
                         </div>
@@ -241,7 +241,7 @@ export function ScheduleStep({
                     </div>
                     <div className="text-sm font-medium text-foreground leading-snug">{course.title}</div>
                     {warning && (
-                      <div className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
+                      <div role="alert" className="flex items-center gap-1.5 mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md px-2.5 py-1.5">
                         <AlertTriangle className="size-3.5 shrink-0" />
                         <span>{warning}</span>
                       </div>

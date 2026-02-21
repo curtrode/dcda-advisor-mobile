@@ -35,7 +35,7 @@ describe('courses service', () => {
     })
 
     it('returns empty array for non-existent category', () => {
-      const courses = getRequiredCategoryCourses('nonexistent' as any, 'major')
+      const courses = getRequiredCategoryCourses('nonexistent' as never, 'major')
       expect(courses).toEqual([])
     })
   })
