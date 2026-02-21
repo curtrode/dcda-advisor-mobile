@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 
 const SANDRA_ORIGIN = import.meta.env.DEV ? 'http://127.0.0.1:5002' : 'https://sandra.digitcu.org'
 const SANDRA_URL = SANDRA_ORIGIN + '?embed=true'
+const LOAD_TIMEOUT_MS = 8000
 
 interface SandraPanelProps {
   open: boolean
@@ -15,12 +16,22 @@ interface SandraPanelProps {
 export function SandraPanel({ open, onClose, wizardContext, programName, programId }: SandraPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [iframeReady, setIframeReady] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
   // Only mount iframe after first open
   const [hasOpened, setHasOpened] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (open && !hasOpened) setHasOpened(true)
   }, [open, hasOpened])
+
+  // Start load timeout when panel first opens
+  useEffect(() => {
+    if (hasOpened && !iframeReady && !timedOut) {
+      timeoutRef.current = setTimeout(() => setTimedOut(true), LOAD_TIMEOUT_MS)
+      return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+    }
+  }, [hasOpened, iframeReady, timedOut])
 
   const sendContext = useCallback(() => {
     if (iframeRef.current?.contentWindow && wizardContext) {
@@ -34,6 +45,8 @@ export function SandraPanel({ open, onClose, wizardContext, programName, program
   // When iframe loads, wait briefly for Sandra's JS to initialize, then send context
   const handleIframeLoad = useCallback(() => {
     setTimeout(() => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setTimedOut(false)
       setIframeReady(true)
       sendContext()
     }, 500)
@@ -88,10 +101,27 @@ export function SandraPanel({ open, onClose, wizardContext, programName, program
             ref={iframeRef}
             src={SANDRA_URL}
             onLoad={handleIframeLoad}
-            className="flex-1 w-full border-0"
+            className={`flex-1 w-full border-0${timedOut && !iframeReady ? ' hidden' : ''}`}
             title="Sandra AI Advisor"
             allow="clipboard-write"
           />
+        )}
+
+        {/* Timeout fallback */}
+        {timedOut && !iframeReady && (
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Sandra is unavailable right now. Your planning work isn't affected — you can close this panel and continue.
+            </p>
+            <a
+              href={SANDRA_ORIGIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary underline hover:no-underline"
+            >
+              Try Sandra directly
+            </a>
+          </div>
         )}
       </div>
     </>
