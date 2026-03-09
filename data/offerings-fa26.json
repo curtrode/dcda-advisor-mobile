@@ -1,6 +1,6 @@
 {
   "term": "Fall 2026",
-  "updated": "2026-02-24",
+  "updated": "2026-03-09",
   "offeredCodes": [
     "ANTH 40523",
     "ARST 10123",
@@ -9,7 +9,6 @@
     "ARST 30610",
     "COSC 10603",
     "CRJU 20883",
-    "DCDA 40273",
     "DSGN 10103",
     "DSGN 10153",
     "ECON 40313",
@@ -77,7 +76,7 @@
     {
       "code": "ARST 20743",
       "section": "060\nREG",
-      "title": "Photography",
+      "title": "Photography - Beginning Photography",
       "schedule": "MW\n14:00-16:50",
       "modality": "In Person"
     },
@@ -117,11 +116,12 @@
       "modality": "In Person"
     },
     {
-      "code": "DCDA 40273",
-      "section": "079\nREG",
-      "title": "DCDA Internship",
-      "schedule": "TBA\nARR",
-      "modality": "In Person"
+      "code": "DSGN 10103",
+      "section": "015\nREG",
+      "title": "Intro Creative Practice",
+      "schedule": "TR\n 9:30-10:50",
+      "modality": "In Person",
+      "coreCode": "FAR"
     },
     {
       "code": "DSGN 10103",
@@ -165,6 +165,13 @@
     },
     {
       "code": "DSGN 10153",
+      "section": "040\nREG",
+      "title": "Intro to Computer Graphics",
+      "schedule": "MW\n12:00-13:50",
+      "modality": "In Person"
+    },
+    {
+      "code": "DSGN 10153",
       "section": "060\nREG",
       "title": "Intro to Computer Graphics",
       "schedule": "MW\n14:00-15:50",
@@ -175,6 +182,13 @@
       "section": "074\nREG",
       "title": "Intro to Computer Graphics - Fashion Merchandising",
       "schedule": "MW\n16:00-17:50",
+      "modality": "In Person"
+    },
+    {
+      "code": "DSGN 10153",
+      "section": "080\nREG",
+      "title": "Intro to Computer Graphics - Fashion Merchandising",
+      "schedule": "MW\n18:00-19:50",
       "modality": "In Person"
     },
     {
@@ -354,10 +368,24 @@
       "modality": "In Person"
     },
     {
+      "code": "INSC 20153",
+      "section": "082\nREG",
+      "title": "Statistical Analysis",
+      "schedule": "W\n17:30-20:10",
+      "modality": "In Person"
+    },
+    {
       "code": "INTR 20103",
       "section": "055\nREG",
       "title": "Tech Skills for Emerging Prof",
       "schedule": "TR\n14:00-15:20",
+      "modality": "In Person"
+    },
+    {
+      "code": "INTR 20103",
+      "section": "074\nREG",
+      "title": "Tech Skills for Emerging Prof",
+      "schedule": "MW\n16:00-17:20",
       "modality": "In Person"
     },
     {
@@ -403,14 +431,6 @@
     {
       "code": "MATH 10043",
       "section": "016\nREG",
-      "title": "Elementary Statistics",
-      "schedule": "TR\n 9:30-10:50",
-      "modality": "In Person",
-      "coreCode": "MTH"
-    },
-    {
-      "code": "MATH 10043",
-      "section": "017\nREG",
       "title": "Elementary Statistics",
       "schedule": "TR\n 9:30-10:50",
       "modality": "In Person",
@@ -482,9 +502,33 @@
     },
     {
       "code": "MATH 10043",
+      "section": "060\nREG",
+      "title": "Elementary Statistics",
+      "schedule": "MWF\n14:00-14:50",
+      "modality": "In Person",
+      "coreCode": "MTH"
+    },
+    {
+      "code": "MATH 10043",
+      "section": "061\nREG",
+      "title": "Elementary Statistics",
+      "schedule": "MWF\n14:00-14:50",
+      "modality": "In Person",
+      "coreCode": "MTH"
+    },
+    {
+      "code": "MATH 10043",
       "section": "065\nREG",
       "title": "Elementary Statistics",
       "schedule": "TR\n15:30-16:50",
+      "modality": "In Person",
+      "coreCode": "MTH"
+    },
+    {
+      "code": "MATH 10043",
+      "section": "070\nREG",
+      "title": "Elementary Statistics",
+      "schedule": "MWF\n15:00-15:50",
       "modality": "In Person",
       "coreCode": "MTH"
     },
@@ -513,9 +557,16 @@
     },
     {
       "code": "STCO 43803",
-      "section": "035\nREG",
+      "section": "060\nREG",
       "title": "New Media",
-      "schedule": "TR\n11:00-12:20",
+      "schedule": "MWF\n14:00-14:50",
+      "modality": "In Person"
+    },
+    {
+      "code": "STCO 43803",
+      "section": "070\nREG",
+      "title": "New Media",
+      "schedule": "MWF\n15:00-15:50",
       "modality": "In Person"
     },
     {
@@ -545,14 +596,14 @@
     {
       "code": "WRIT 30390",
       "section": "065\nREG",
-      "title": "Publication Production",
+      "title": "Publication Production - eleven40seven",
       "schedule": "T\n15:30-16:50",
       "modality": "In Person"
     },
     {
       "code": "WRIT 30390",
       "section": "066\nREG",
-      "title": "Publication Production",
+      "title": "Publication Production - Art and Wellness",
       "schedule": "R\n15:30-16:50",
       "modality": "In Person"
     },
@@ -568,7 +619,7 @@
       "code": "WRIT 40363",
       "section": "020\n8W1",
       "title": "Multimedia Authrng:Apps&eBooks",
-      "schedule": "MWF\n10:00-10:15",
+      "schedule": "MWF\n10:00-11:50",
       "modality": "In Person"
     }
   ]

@@ -19,10 +19,12 @@ export function AdminLogin({ error: authError }: AdminLoginProps) {
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
     } catch (err) {
+      console.error('Sign-in error:', err)
       if (err instanceof Error && err.message.includes('popup-closed')) {
         // User closed popup, not an error
       } else {
-        setError('Sign-in failed. Please try again.')
+        const msg = err instanceof Error ? err.message : 'Unknown error'
+        setError(`Sign-in failed: ${msg}`)
       }
     } finally {
       setLoading(false)
