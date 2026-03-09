@@ -91,8 +91,9 @@ export function CourseStep({
     )
   })
 
-  // Check if this is a DC or DA elective category (single category multi-select with "not yet")
+  // Check if this is a multi-select category that needs a "haven't taken any" option
   const isSingleCategoryMultiSelect = categoryId === 'dcElective' || categoryId === 'daElective'
+  const showNotYetOption = isSingleCategoryMultiSelect || (categoryId === 'generalElectives' && degreeType === 'minor')
 
   // Is filtering needed? (Long lists)
   const showSearch = categoryCourses.length > 10
@@ -204,7 +205,7 @@ export function CourseStep({
         )}
 
         {/* "Haven't taken any" as first-class option */}
-        {isSingleCategoryMultiSelect && (
+        {showNotYetOption && (
           <button
             type="button"
             onClick={onSelectNotYet}
