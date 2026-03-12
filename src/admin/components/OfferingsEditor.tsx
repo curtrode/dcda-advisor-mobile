@@ -19,7 +19,7 @@ export function OfferingsEditor() {
     termId
   )
   const coursesDoc = useFirestoreDoc<{ courses: Course[] }>('dcda_config', 'courses')
-  const allCourses = coursesDoc.data?.courses ?? []
+  const allCourses = useMemo(() => coursesDoc.data?.courses ?? [], [coursesDoc.data])
 
   const [search, setSearch] = useState('')
   const [editingSection, setEditingSection] = useState<CourseSection | null>(null)

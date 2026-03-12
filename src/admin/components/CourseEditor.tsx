@@ -33,7 +33,7 @@ export function CourseEditor() {
   const [isNew, setIsNew] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
 
-  const courses = data?.courses ?? []
+  const courses = useMemo(() => data?.courses ?? [], [data])
 
   const filtered = useMemo(() => {
     return courses.filter((c) => {

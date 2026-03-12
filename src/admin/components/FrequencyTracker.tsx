@@ -46,7 +46,7 @@ export function FrequencyTracker() {
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<Pattern | 'all'>('all')
 
-  const frequency = data ?? { terms: [], courses: {} }
+  const frequency = useMemo(() => data ?? { terms: [], courses: {} }, [data])
 
   const rows = useMemo(() => {
     const entries = Object.entries(frequency.courses).map(([code, terms]) => ({
