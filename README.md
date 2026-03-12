@@ -72,9 +72,9 @@ Create a production build (outputs to `dist/`):
 npm run build
 ```
 
-## Integration: AddRan Advising Ecosystem
+## Integration: Advising Ecosystem
 
-This wizard is a **producer** in the hub-and-spoke advising ecosystem. It publishes an advising manifest consumed by [Sandra](https://github.com/TCU-DCDA/addran-advisor-chat) (the AddRan chatbot).
+This wizard publishes an advising manifest consumed by [Sandra](https://github.com/TCU-DCDA/advisor-chat), the shared AI chat layer in the [Advising Ecosystem](https://github.com/TCU-DCDA/advising-ecosystem). Sandra powers the built-in chat panel where students can ask questions about requirements, careers, and course selection.
 
 ### Manifest generation
 ```bash
