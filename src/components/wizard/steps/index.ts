@@ -1,5 +1,5 @@
 export { WelcomeStep } from './WelcomeStep'
-export { NameStep } from './NameStep'
+export { NameStep, isValidTcuEmail } from './NameStep'
 export { GraduationStep } from './GraduationStep'
 export { CourseStep } from './CourseStep'
 export { SpecialCreditsStep } from './SpecialCreditsStep'

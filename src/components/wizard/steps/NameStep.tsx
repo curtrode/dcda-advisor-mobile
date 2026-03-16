@@ -5,6 +5,10 @@ import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 
 const BASE_URL = import.meta.env.BASE_URL
 
+export function isValidTcuEmail(email: string): boolean {
+  return /^[^\s@]+@tcu\.edu$/i.test(email)
+}
+
 interface NameStepProps {
   value: string
   email?: string
@@ -54,7 +58,11 @@ export function NameStep({ value, email, degreeType, onChange, onEmailChange, on
           placeholder="name@tcu.edu"
           value={email || ''}
           onChange={(e) => onEmailChange(e.target.value)}
+          className={email && !isValidTcuEmail(email) ? 'border-destructive focus-visible:ring-destructive' : ''}
         />
+        {email && !isValidTcuEmail(email) && (
+          <p className="text-sm text-destructive mt-1">Please enter a valid TCU email (name@tcu.edu)</p>
+        )}
       </div>
 
       <div>

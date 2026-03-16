@@ -12,6 +12,7 @@ import {
   ScheduleStep,
   ReviewSummaryStep,
   ReviewActionsStep,
+  isValidTcuEmail,
 } from '@/components/wizard'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { getRequiredCategoryCourses } from '@/services/courses'
@@ -287,7 +288,7 @@ function App() {
       case 'welcome':
         return true // Can always proceed from welcome screen
       case 'name':
-        return studentData.name.trim().length > 0 && studentData.degreeType !== null
+        return studentData.name.trim().length > 0 && studentData.degreeType !== null && (!studentData.email || isValidTcuEmail(studentData.email))
       case 'graduation':
         return studentData.expectedGraduation !== null
       case 'intro':

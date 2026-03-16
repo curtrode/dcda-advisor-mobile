@@ -1,5 +1,5 @@
 import type { StudentData, WizardStepId } from '@/types'
-import { getCourseByCode, categoryNames } from '@/services/courses'
+import { getCourseByCode, categoryNames, isCourseOffered, getNextSemesterTerm } from '@/services/courses'
 import requirementsData from '../../data/requirements.json'
 
 const STEP_LABELS: Record<WizardStepId, string> = {
@@ -75,6 +75,7 @@ export function buildAdaContext(
     ...(reqs.electives?.categories ?? []),
   ]
 
+  const term = getNextSemesterTerm()
   const remaining = allCategories
     .filter(cat => {
       if (!cat.courses) return false
@@ -82,10 +83,21 @@ export function buildAdaContext(
       const specialFilled = studentData.specialCredits.some(sc => sc.countsAs === cat.id)
       return !filled && !specialFilled
     })
-    .map(cat => `${cat.name} (${cat.hours} hrs)`)
+    .map(cat => {
+      const offered = cat.courses?.filter(c => isCourseOffered(c)) ?? []
+      const notOffered = cat.courses?.filter(c => !isCourseOffered(c)) ?? []
+      let desc = `${cat.name} (${cat.hours} hrs)`
+      if (offered.length > 0) {
+        desc += ` — offered ${term}: ${offered.join(', ')}`
+      }
+      if (notOffered.length > 0) {
+        desc += ` — NOT offered ${term}: ${notOffered.join(', ')}`
+      }
+      return desc
+    })
 
   if (remaining.length > 0) {
-    lines.push(`Still needed: ${remaining.join(', ')}`)
+    lines.push(`Still needed: ${remaining.join('; ')}`)
   }
 
   // Progress summary
