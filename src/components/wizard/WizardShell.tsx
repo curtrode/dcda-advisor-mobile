@@ -4,7 +4,7 @@ import { AdaPanel } from './AdaPanel'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/hooks/useTheme'
-import { Moon, Sun, MessageCircle } from 'lucide-react'
+import { Moon, Sun, MessageCircle, RotateCcw } from 'lucide-react'
 import type { WizardPart } from '@/types'
 
 interface PhaseInfo {
@@ -35,6 +35,9 @@ interface WizardShellProps {
   showBackButton?: boolean
   showNextButton?: boolean
 
+  // Reset
+  onStartOver?: () => void
+
   // Chat assistant
   chatContext?: string | null
   chatProgramName?: string | null
@@ -54,6 +57,7 @@ export function WizardShell({
   nextDisabled = false,
   showBackButton = true,
   showNextButton = true,
+  onStartOver,
   chatContext,
   chatProgramName,
   chatProgramId,
@@ -76,13 +80,25 @@ export function WizardShell({
           <h1 className="text-2xl font-extrabold tracking-tight leading-none truncate">DCDA Advisor</h1>
           <p className="text-sm font-medium text-primary-foreground/80 mt-1 truncate">Semester Planning Tool</p>
         </div>
-        <button
-          onClick={toggleTheme}
-          className="p-3 rounded-xl hover:bg-white/10 active:bg-white/20 transition-all border border-white/10 backdrop-blur-sm"
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {onStartOver && (
+            <button
+              onClick={onStartOver}
+              className="p-3 rounded-xl hover:bg-white/10 active:bg-white/20 transition-all border border-white/10 backdrop-blur-sm"
+              aria-label="Start over"
+              title="Start over"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+          )}
+          <button
+            onClick={toggleTheme}
+            className="p-3 rounded-xl hover:bg-white/10 active:bg-white/20 transition-all border border-white/10 backdrop-blur-sm"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+          </button>
+        </div>
       </header>
 
       {/* Segmented Progress Indicator (replaces dot stepper + part label bar) */}

@@ -754,6 +754,7 @@ function App() {
         currentStepInPart={wizard.currentStepInPart}
         phases={wizard.phases}
         stepKey={wizard.currentStep.id}
+        onStartOver={handleStartOver}
         canGoBack={wizard.canGoBack}
         canGoNext={wizard.canGoNext}
         onBack={wizard.goBack}
