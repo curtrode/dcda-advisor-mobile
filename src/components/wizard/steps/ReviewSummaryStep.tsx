@@ -115,9 +115,10 @@ function CourseRow({ code, category, showCheck = false }: CourseRowProps) {
 interface ReviewSummaryStepProps {
   studentData: StudentData
   generalElectives?: string[]
+  scheduledSelections?: Record<string, string | string[] | null>
 }
 
-export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSummaryStepProps) {
+export function ReviewSummaryStep({ studentData, generalElectives, scheduledSelections }: ReviewSummaryStepProps) {
   const { degreeProgress, requirements } = useRequirements(studentData, generalElectives)
 
   const selectedDegreeType = studentData.degreeType || 'major'
@@ -130,6 +131,30 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
   const scheduledCourseCategories: Record<string, string> = {}
   const neededCategories: { category: string; name: string; remaining: number }[] = []
   const assignedScheduledCourses = new Set<string>()
+
+  // Build category ID → name lookup from degreeProgress
+  const categoryNameById: Record<string, string> = {}
+  if (degreeProgress) {
+    for (const cat of degreeProgress.categories) {
+      categoryNameById[cat.id] = cat.name
+    }
+  }
+
+  // Use scheduledSelections (actual assignments from Part 2) when available
+  if (scheduledSelections && degreeProgress) {
+    for (const [catId, value] of Object.entries(scheduledSelections)) {
+      const catName = categoryNameById[catId]
+      if (!catName) continue
+      const codes = Array.isArray(value) ? value : (value ? [value] : [])
+      if (codes.length > 0) {
+        scheduledByCategory[catName] = codes
+        codes.forEach((code) => {
+          assignedScheduledCourses.add(code)
+          scheduledCourseCategories[code] = catName
+        })
+      }
+    }
+  }
 
   if (degreeProgress) {
     const sortedCategories = [...degreeProgress.categories].sort((a, b) => {
@@ -149,7 +174,8 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
 
       const isAlreadySatisfied = cat.completed >= cat.required
 
-      if (!isAlreadySatisfied) {
+      // Fallback: derive scheduled categories if scheduledSelections not provided
+      if (!scheduledSelections && !isAlreadySatisfied) {
         const scheduledInCat = studentData.scheduledCourses.filter((code) =>
           cat.courses.includes(code) && !assignedScheduledCourses.has(code)
         )
@@ -160,17 +186,14 @@ export function ReviewSummaryStep({ studentData, generalElectives }: ReviewSumma
             scheduledCourseCategories[code] = cat.name
           })
         }
+      }
 
-        const totalFilled = cat.completed + scheduledInCat.length
-        if (totalFilled < cat.required) {
-          const remaining = cat.required - totalFilled
-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
-        }
-      } else {
-        if (cat.completed < cat.required) {
-          const remaining = cat.required - cat.completed
-          neededCategories.push({ category: cat.id, name: cat.name, remaining })
-        }
+      // Count scheduled courses assigned to this category
+      const scheduledInCatCount = (scheduledByCategory[cat.name] || []).length
+      const totalFilled = cat.completed + scheduledInCatCount
+      if (totalFilled < cat.required) {
+        const remaining = cat.required - totalFilled
+        neededCategories.push({ category: cat.id, name: cat.name, remaining })
       }
     }
   }

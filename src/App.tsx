@@ -718,6 +718,7 @@ function App() {
               scheduledCourses: allScheduledCourses,
             }}
             generalElectives={categorySelections.generalElectives}
+            scheduledSelections={scheduledSelections}
           />
         )
 
@@ -730,6 +731,7 @@ function App() {
               scheduledCourses: allScheduledCourses,
             }}
             generalElectives={categorySelections.generalElectives}
+            scheduledSelections={scheduledSelections}
             updateStudentData={updateStudentData}
             onStartOver={handleStartOver}
           />

@@ -22,10 +22,11 @@ const creditTypeLabels: Record<string, string> = {
 interface ExportOptions {
   studentData: StudentData
   generalElectives?: string[]
+  scheduledSelections?: Record<string, string | string[] | null>
 }
 
 // Generate PDF and return blob URL for preview
-export function generatePdfBlob({ studentData, generalElectives }: ExportOptions): { blobUrl: string; filename: string } {
+export function generatePdfBlob({ studentData, generalElectives, scheduledSelections }: ExportOptions): { blobUrl: string; filename: string } {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
@@ -159,38 +160,46 @@ export function generatePdfBlob({ studentData, generalElectives }: ExportOptions
     return 0
   })
 
-  // Process scheduled courses with double-counting prevention
-  for (const cat of allCategories) {
-    // Check completion status first
-    const completedInCat = studentData.completedCourses.filter((c: string) => {
-      if (!cat.courses.includes(c)) return false
-      if (generalElectives && generalElectives.includes(c)) return false
-      if (isFlexibleCourse(c)) {
-        const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
-        return assignedCategory === cat.id
+  // Use scheduledSelections (actual assignments from Part 2) when available
+  if (scheduledSelections) {
+    for (const [catId, value] of Object.entries(scheduledSelections)) {
+      const codes = Array.isArray(value) ? value : (value ? [value] : [])
+      if (codes.length > 0) {
+        scheduledByCategory[catId] = codes
+        codes.forEach((code: string) => assignedScheduledCourses.add(code))
       }
-      return true
-    })
-    const credits = specialCreditsByCategory[cat.id] || []
-    const specialCreditCount = credits.length
-    const totalCompleted = completedInCat.length + specialCreditCount
-
-    // Only assign scheduled courses if category is not yet satisfied
-    const isAlreadySatisfied = totalCompleted >= cat.required
-    if (!isAlreadySatisfied) {
-      const scheduledInCat = studentData.scheduledCourses.filter((code: string) => {
-        if (assignedScheduledCourses.has(code)) return false // Skip already assigned
-        if (!cat.courses.includes(code)) return false
-        if (isFlexibleCourse(code)) {
-          const assignedCategory = studentData.courseCategories?.[code as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
+    }
+  } else {
+    // Fallback: derive scheduled categories from course lists
+    for (const cat of allCategories) {
+      const completedInCat = studentData.completedCourses.filter((c: string) => {
+        if (!cat.courses.includes(c)) return false
+        if (generalElectives && generalElectives.includes(c)) return false
+        if (isFlexibleCourse(c)) {
+          const assignedCategory = studentData.courseCategories?.[c as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
           return assignedCategory === cat.id
         }
         return true
       })
-      if (scheduledInCat.length > 0) {
-        scheduledByCategory[cat.id] = scheduledInCat
-        // Mark as assigned to prevent double-counting
-        scheduledInCat.forEach((code: string) => assignedScheduledCourses.add(code))
+      const credits = specialCreditsByCategory[cat.id] || []
+      const specialCreditCount = credits.length
+      const totalCompleted = completedInCat.length + specialCreditCount
+
+      const isAlreadySatisfied = totalCompleted >= cat.required
+      if (!isAlreadySatisfied) {
+        const scheduledInCat = studentData.scheduledCourses.filter((code: string) => {
+          if (assignedScheduledCourses.has(code)) return false
+          if (!cat.courses.includes(code)) return false
+          if (isFlexibleCourse(code)) {
+            const assignedCategory = studentData.courseCategories?.[code as keyof typeof studentData.courseCategories] as FlexibleCourseCategory | undefined
+            return assignedCategory === cat.id
+          }
+          return true
+        })
+        if (scheduledInCat.length > 0) {
+          scheduledByCategory[cat.id] = scheduledInCat
+          scheduledInCat.forEach((code: string) => assignedScheduledCourses.add(code))
+        }
       }
     }
   }

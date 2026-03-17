@@ -16,11 +16,12 @@ import { recordAnonymousSubmission, trackExport } from '@/services/analytics'
 interface ReviewActionsStepProps {
   studentData: StudentData
   generalElectives?: string[]
+  scheduledSelections?: Record<string, string | string[] | null>
   updateStudentData: (updates: Partial<StudentData>) => void
   onStartOver: () => void
 }
 
-export function ReviewActionsStep({ studentData, generalElectives, updateStudentData, onStartOver }: ReviewActionsStepProps) {
+export function ReviewActionsStep({ studentData, generalElectives, scheduledSelections, updateStudentData, onStartOver }: ReviewActionsStepProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
   const [showExportOptions, setShowExportOptions] = useState(false)
@@ -45,7 +46,7 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
 
   const handlePreview = useCallback(() => {
     revokePreviewUrl()
-    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
+    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
     setPreviewUrl(blobUrl)
     setPreviewFilename(filename)
   }, [studentData, generalElectives, revokePreviewUrl])
@@ -56,7 +57,7 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   }, [revokePreviewUrl])
 
   const handlePrint = () => {
-    const { blobUrl } = generatePdfBlob({ studentData, generalElectives })
+    const { blobUrl } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
     printPdf(blobUrl, () => URL.revokeObjectURL(blobUrl))
     trackExport('print')
   }
@@ -69,7 +70,7 @@ export function ReviewActionsStep({ studentData, generalElectives, updateStudent
   }
 
   const handleSubmitToAdvisor = () => {
-    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives })
+    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
     downloadPdf(blobUrl, filename)
     URL.revokeObjectURL(blobUrl)
     setSubmitFilename(filename)
