@@ -10,11 +10,27 @@ const courses = coursesRaw.filter((course, index, self) =>
 )
 
 let offerings = offeringsData as CourseOfferings
+let summerOfferings: CourseOfferings | null = null
 const requirements = requirementsData as typeof requirementsData
 
 /** Called by DCDADataProvider to update live offerings from Firestore */
 export function updateOfferings(data: CourseOfferings): void {
   offerings = data
+}
+
+/** Called by DCDADataProvider to update summer offerings from Firestore */
+export function updateSummerOfferings(data: CourseOfferings): void {
+  summerOfferings = data
+}
+
+/** Get summer offerings (if available) */
+export function getSummerOfferings(): CourseOfferings | null {
+  return summerOfferings
+}
+
+/** Get the summer semester term label (if summer offerings exist) */
+export function getSummerSemesterTerm(): string | null {
+  return summerOfferings?.term ?? null
 }
 
 // Get all courses for a specific requirement category
@@ -59,18 +75,20 @@ export function getOfferedCoursesForCategory(
   categoryId: RequirementCategoryId,
   degreeType: 'major' | 'minor' = 'major',
   excludeCourses: string[] = [],
-  completedRequiredCourses: string[] = []
+  completedRequiredCourses: string[] = [],
+  useOfferings?: CourseOfferings
 ): Course[] {
+  const targetOfferings = useOfferings ?? offerings
   const categoryCourses = getCoursesForCategory(categoryId, degreeType, completedRequiredCourses)
-  
+
   // Specific exclusions for General Electives
-  const filteredCourses = categoryId === 'generalElectives' 
+  const filteredCourses = categoryId === 'generalElectives'
     ? categoryCourses.filter(c => c.code !== 'DCDA 40833')
     : categoryCourses
 
   return filteredCourses.filter(
     (course) =>
-      offerings.offeredCodes.includes(course.code) &&
+      targetOfferings.offeredCodes.includes(course.code) &&
       !excludeCourses.includes(course.code)
   )
 }
