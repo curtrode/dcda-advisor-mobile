@@ -17,9 +17,10 @@ interface TransitionStepProps {
   }
   includeSummer: boolean
   onToggleSummer: (include: boolean) => void
+  summerAvailable: boolean
 }
 
-export function TransitionStep({ onNext, unmetCount, selections, includeSummer, onToggleSummer }: TransitionStepProps) {
+export function TransitionStep({ onNext, unmetCount, selections, includeSummer, onToggleSummer, summerAvailable }: TransitionStepProps) {
   // Helper to check if a category has any selections
   const hasSelection = (key: keyof typeof selections) => {
     const val = selections[key]
@@ -121,16 +122,22 @@ export function TransitionStep({ onNext, unmetCount, selections, includeSummer, 
           </div>
 
           <div className="flex items-center space-x-2 pt-2 border-t mt-1">
-            <Checkbox 
-              id="summer" 
-              checked={includeSummer} 
-              onCheckedChange={(checked) => onToggleSummer(checked === true)} 
+            <Checkbox
+              id="summer"
+              checked={includeSummer}
+              disabled={!summerAvailable}
+              onCheckedChange={(checked) => onToggleSummer(checked === true)}
             />
             <label
               htmlFor="summer"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
             >
               Include summer terms in my plan
+              {!summerAvailable && (
+                <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                  Summer offerings not yet available
+                </span>
+              )}
             </label>
           </div>
         </div>

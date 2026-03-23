@@ -5,10 +5,11 @@ import type { CourseOfferings } from '@/types'
 
 export interface DCDAData {
   offerings: CourseOfferings | null
+  summerOfferings: CourseOfferings | null
   loading: boolean
 }
 
-const defaultData: DCDAData = { offerings: null, loading: true }
+const defaultData: DCDAData = { offerings: null, summerOfferings: null, loading: true }
 
 export const DCDADataContext = createContext<DCDAData>(defaultData)
 
@@ -16,24 +17,42 @@ export function useDCDAData(): DCDAData {
   return useContext(DCDADataContext)
 }
 
-/** Subscribes to Firestore offerings doc and returns live data with static fallback */
+/** Subscribes to Firestore offerings docs and returns live data with static fallback */
 export function useDCDADataLoader(): DCDAData {
-  const [data, setData] = useState<DCDAData>(defaultData)
+  const [fallOfferings, setFallOfferings] = useState<CourseOfferings | null>(null)
+  const [summerOfferings, setSummerOfferings] = useState<CourseOfferings | null>(null)
+  const [fallLoaded, setFallLoaded] = useState(false)
+  const [summerLoaded, setSummerLoaded] = useState(false)
 
   useEffect(() => {
-    const unsub = onSnapshot(
+    const unsubFall = onSnapshot(
       doc(db, 'dcda_config', 'offerings_fa26'),
       (snap) => {
-        const offerings = snap.exists() ? (snap.data() as CourseOfferings) : null
-        setData({ offerings, loading: false })
+        setFallOfferings(snap.exists() ? (snap.data() as CourseOfferings) : null)
+        setFallLoaded(true)
       },
       () => {
-        // Firestore unavailable — keep static fallback
-        setData({ offerings: null, loading: false })
+        setFallLoaded(true)
       }
     )
-    return unsub
+
+    const unsubSummer = onSnapshot(
+      doc(db, 'dcda_config', 'offerings_su26'),
+      (snap) => {
+        setSummerOfferings(snap.exists() ? (snap.data() as CourseOfferings) : null)
+        setSummerLoaded(true)
+      },
+      () => {
+        setSummerLoaded(true)
+      }
+    )
+
+    return () => { unsubFall(); unsubSummer() }
   }, [])
 
-  return data
+  return {
+    offerings: fallOfferings,
+    summerOfferings,
+    loading: !fallLoaded || !summerLoaded,
+  }
 }

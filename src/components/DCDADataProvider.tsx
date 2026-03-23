@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { DCDADataContext, useDCDADataLoader } from '@/hooks/useDCDAData'
-import { updateOfferings } from '@/services/courses'
+import { updateOfferings, updateSummerOfferings } from '@/services/courses'
 
 interface DCDADataProviderProps {
   children: ReactNode
@@ -15,7 +15,13 @@ export function DCDADataProvider({ children }: DCDADataProviderProps) {
     if (!data.loading && data.offerings) {
       updateOfferings(data.offerings)
     }
-  }, [data])
+  }, [data.loading, data.offerings])
+
+  useEffect(() => {
+    if (!data.loading && data.summerOfferings) {
+      updateSummerOfferings(data.summerOfferings)
+    }
+  }, [data.loading, data.summerOfferings])
 
   return (
     <DCDADataContext.Provider value={data}>

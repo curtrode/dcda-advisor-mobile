@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import type { WizardStep, WizardPart, RequirementCategoryId, StudentData } from '@/types'
-import { getNextSemesterTerm } from '@/services/courses'
+import { getNextSemesterTerm, getSummerSemesterTerm } from '@/services/courses'
 
 const PHASE_LABELS: Record<WizardPart, string> = {
   completed: 'History',
@@ -75,6 +75,7 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
   const [unmetCategories, setUnmetCategories] = useState<RequirementCategoryId[]>([])
 
   const degreeType = studentData.degreeType
+  const includeSummer = studentData.includeSummer ?? false
 
   // Build dynamic step list based on degree type and unmet categories
   const steps = useMemo(() => {
@@ -89,29 +90,46 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
 
     // Add Part 2 steps for each unmet category (excluding capstone which is auto-scheduled)
     const schedulableCategories = unmetCategories.filter(c => c !== 'capstone')
-    
+
     // Add transition step if we have scheduling work to do
     if (schedulableCategories.length > 0) {
       allSteps.push(TRANSITION_STEP)
     }
 
-    for (const categoryId of schedulableCategories) {
-      const categoryNames: Record<RequirementCategoryId, string> = {
-        intro: 'Intro/Req\'d English',
-        statistics: 'Statistics',
-        coding: 'Coding',
-        mmAuthoring: 'Multimedia Authoring',
-        capstone: 'Capstone',
-        dcElective: 'Digital Culture Elective',
-        daElective: 'Data Analytics Elective',
-        generalElectives: 'General Electives',
-      }
+    const categoryNames: Record<RequirementCategoryId, string> = {
+      intro: 'Intro/Req\'d English',
+      statistics: 'Statistics',
+      coding: 'Coding',
+      mmAuthoring: 'Multimedia Authoring',
+      capstone: 'Capstone',
+      dcElective: 'Digital Culture Elective',
+      daElective: 'Data Analytics Elective',
+      generalElectives: 'General Electives',
+    }
 
+    const summerTerm = getSummerSemesterTerm()
+
+    // If summer is enabled and summer offerings exist, add summer scheduling steps first
+    if (includeSummer && summerTerm) {
+      for (const categoryId of schedulableCategories) {
+        allSteps.push({
+          id: 'schedule',
+          part: 'schedule',
+          title: `Which ${categoryNames[categoryId]} course for ${summerTerm}?`,
+          categoryId,
+          term: 'summer',
+        })
+      }
+    }
+
+    // Fall scheduling steps
+    for (const categoryId of schedulableCategories) {
       allSteps.push({
         id: 'schedule',
         part: 'schedule',
         title: `Which ${categoryNames[categoryId]} course for ${getNextSemesterTerm()}?`,
         categoryId,
+        term: 'fall',
       })
     }
 
@@ -120,7 +138,7 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
     allSteps.push(REVIEW_ACTIONS_STEP)
 
     return allSteps
-  }, [degreeType, unmetCategories])
+  }, [degreeType, unmetCategories, includeSummer])
 
   const currentStep = steps[currentStepIndex] || steps[0]
   const totalSteps = steps.length
@@ -131,11 +149,16 @@ export function useWizardFlow(studentData: StudentData): UseWizardFlowReturn {
     switch (part) {
       case 'completed': return 'Part 1: Completed Courses'
       case 'transition': return 'Phase 2'
-      case 'schedule': return `Part 2: Schedule for ${getNextSemesterTerm()}`
+      case 'schedule': {
+        const term = currentStep.term === 'summer'
+          ? (getSummerSemesterTerm() ?? getNextSemesterTerm())
+          : getNextSemesterTerm()
+        return `Part 2: Schedule for ${term}`
+      }
       case 'review': return 'Part 3: Review Your Plan'
       case 'submit': return 'Part 4: Save & Submit'
     }
-  }, [part])
+  }, [part, currentStep.term])
 
   // Current schedule category (for Part 2)
   const currentScheduleCategory = part === 'schedule' ? (currentStep.categoryId || null) : null
