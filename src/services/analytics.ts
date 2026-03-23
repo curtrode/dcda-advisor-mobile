@@ -12,6 +12,8 @@ import type { StudentData } from '@/types'
 
 // All tracking is anonymous — no student names, emails, or IDs are stored.
 // This ensures FERPA compliance while enabling aggregate analytics.
+// Skip all analytics on localhost to keep production data clean.
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
 function getTodayId(): string {
   return new Date().toISOString().slice(0, 10) // "2026-02-24"
@@ -47,6 +49,7 @@ async function generateSessionHash(): Promise<string> {
 }
 
 export async function trackWizardStart(): Promise<void> {
+  if (isLocal) return
   try {
     const dayRef = doc(db, 'dcda_analytics', 'daily', 'stats', getTodayId())
     const hour = new Date().getHours().toString()
@@ -65,6 +68,7 @@ export async function trackWizardStart(): Promise<void> {
 }
 
 export async function trackStepVisit(stepId: string): Promise<void> {
+  if (isLocal) return
   try {
     const dayRef = doc(db, 'dcda_analytics', 'daily', 'stats', getTodayId())
     await setDoc(
@@ -84,6 +88,7 @@ const trackedExports = new Set<string>()
 export async function trackExport(
   method: 'pdf' | 'csv' | 'print' | 'email'
 ): Promise<void> {
+  if (isLocal) return
   if (trackedExports.has(method)) return
   trackedExports.add(method)
   try {
@@ -104,6 +109,7 @@ export async function recordAnonymousSubmission(
   studentData: StudentData,
   degreeProgressPct: number
 ): Promise<void> {
+  if (isLocal) return
   try {
     const sessionHash = await generateSessionHash()
 
