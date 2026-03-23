@@ -65,9 +65,14 @@ export async function trackStepVisit(stepId: string): Promise<void> {
 }
 
 // Track export actions (PDF, CSV, print) — anonymous counters only.
+// Debounced per session: each method only counts once per page load.
+const trackedExports = new Set<string>()
+
 export async function trackExport(
   method: 'pdf' | 'csv' | 'print' | 'email'
 ): Promise<void> {
+  if (trackedExports.has(method)) return
+  trackedExports.add(method)
   try {
     const dayRef = doc(db, 'dcda_analytics', 'daily', 'stats', getTodayId())
     await setDoc(
