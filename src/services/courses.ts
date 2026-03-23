@@ -316,28 +316,36 @@ export function buildSemesterPlan(
     }
   }
   
-  // Distribute remaining slots evenly across semesters (starting from 2nd if 1st has scheduled)
-  const startIdx = plan[0].courses.length > 0 ? 1 : 0
-  const availableSemesters = semesters.length - startIdx
-  
-  if (availableSemesters > 0 && neededSlots.length > 0) {
-    const perSemester = Math.ceil(neededSlots.length / availableSemesters)
+  // Determine which semesters are available for distributing needed placeholder slots
+  // Skip semesters that already have scheduled courses, and always skip summer semesters
+  // (students opt into specific summer courses; placeholder slots belong in fall/spring)
+  const distributionIndices: number[] = []
+  for (let i = 0; i < semesters.length; i++) {
+    const isSummer = semesters[i].startsWith('Summer')
+    if (isSummer) continue
+    if (plan[i].courses.length > 0) continue
+    distributionIndices.push(i)
+  }
+
+  if (distributionIndices.length > 0 && neededSlots.length > 0) {
+    const perSemester = Math.ceil(neededSlots.length / distributionIndices.length)
     let slotIdx = 0
-    
-    for (let semIdx = startIdx; semIdx < semesters.length && slotIdx < neededSlots.length; semIdx++) {
-      // Skip if this semester is the capstone semester (to avoid overloading it)
+
+    for (const semIdx of distributionIndices) {
+      if (slotIdx >= neededSlots.length) break
       const isCapstone = semesters[semIdx] === capstoneTarget
       const maxThisSem = isCapstone ? Math.min(perSemester, 2) : perSemester
-      
+
       for (let i = 0; i < maxThisSem && slotIdx < neededSlots.length; i++) {
         plan[semIdx].courses.push({ code: '—', category: neededSlots[slotIdx].name })
         slotIdx++
       }
     }
-    
+
     // If there are still remaining slots (due to capstone limit), add them to other semesters
     while (slotIdx < neededSlots.length) {
-      for (let semIdx = startIdx; semIdx < semesters.length && slotIdx < neededSlots.length; semIdx++) {
+      for (const semIdx of distributionIndices) {
+        if (slotIdx >= neededSlots.length) break
         if (semesters[semIdx] !== capstoneTarget) {
           plan[semIdx].courses.push({ code: '—', category: neededSlots[slotIdx].name })
           slotIdx++
