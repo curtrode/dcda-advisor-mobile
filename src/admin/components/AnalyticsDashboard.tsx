@@ -60,7 +60,6 @@ export function AnalyticsDashboard() {
         <StatCard label="Unique Sessions" value={summary.totalUniqueSessions || '—'} />
         <StatCard label="Majors" value={summary.byDegreeType.major} />
         <StatCard label="Minors" value={summary.byDegreeType.minor} />
-        <StatCard label="Completion Rate" value={`${completionRate}%`} />
       </div>
 
       {/* Submission Insights */}
@@ -87,6 +86,7 @@ export function AnalyticsDashboard() {
             ? `${Math.round((summary.insights.specialCreditsCount / summary.totalSubmissions) * 100)}%`
             : '—'}
         />
+        <StatCard label="Completion Rate" value={`${completionRate}%`} />
       </div>
 
       {/* Daily Activity (last 30 days) */}
