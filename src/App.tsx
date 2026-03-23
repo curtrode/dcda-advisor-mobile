@@ -784,6 +784,7 @@ function App() {
             }}
             generalElectives={categorySelections.generalElectives}
             scheduledSelections={scheduledSelections}
+            summerScheduledSelections={summerScheduledSelections}
             updateStudentData={updateStudentData}
             onStartOver={handleStartOver}
           />

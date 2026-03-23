@@ -23,10 +23,11 @@ interface ExportOptions {
   studentData: StudentData
   generalElectives?: string[]
   scheduledSelections?: Record<string, string | string[] | null>
+  summerScheduledSelections?: Record<string, string | string[] | null>
 }
 
 // Generate PDF and return blob URL for preview
-export function generatePdfBlob({ studentData, generalElectives, scheduledSelections }: ExportOptions): { blobUrl: string; filename: string } {
+export function generatePdfBlob({ studentData, generalElectives, scheduledSelections, summerScheduledSelections }: ExportOptions): { blobUrl: string; filename: string } {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
@@ -106,6 +107,7 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
   // Build scheduled courses by category (matching ReviewStep logic)
   const requiredCategoryCourses = degree.required.categories.flatMap((c: { courses?: string[] }) => c.courses ?? [])
   const scheduledByCategory: Record<string, string[]> = {}
+  const summerScheduledByCategory: Record<string, string[]> = {}
   const assignedScheduledCourses = new Set<string>() // Track courses already assigned to avoid double-counting
 
   // Type for degree with electives
@@ -159,6 +161,17 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
     if (!a.isElective && b.isElective) return -1
     return 0
   })
+
+  // Build summer scheduled-by-category
+  if (summerScheduledSelections) {
+    for (const [catId, value] of Object.entries(summerScheduledSelections)) {
+      const codes = Array.isArray(value) ? value : (value ? [value] : [])
+      if (codes.length > 0) {
+        summerScheduledByCategory[catId] = codes
+        codes.forEach((code: string) => assignedScheduledCourses.add(code))
+      }
+    }
+  }
 
   // Use scheduledSelections (actual assignments from Part 2) when available
   if (scheduledSelections) {
@@ -230,7 +243,9 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
   doc.setFont('helvetica', 'bold')
   doc.text('Requirement', startX + 2, y + 1)
   doc.text('Completed / Credits', startX + colWidths.requirement + 2, y + 1)
-  doc.text(`${getNextSemesterTerm()} / Future`, startX + colWidths.requirement + colWidths.completed + 2, y + 1)
+  const hasSummer = Object.values(summerScheduledByCategory).flat().length > 0
+  const scheduledHeader = hasSummer ? 'Scheduled / Future' : `${getNextSemesterTerm()} / Future`
+  doc.text(scheduledHeader, startX + colWidths.requirement + colWidths.completed + 2, y + 1)
   
   y += 8
 
@@ -298,21 +313,33 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
   const requiredOverflow: string[] = []
   const electiveOverflow: string[] = []
 
+  // Helper: merge summer + fall scheduled items with term labels
+  const buildScheduledDisplay = (catId: string): string[] => {
+    const summer = summerScheduledByCategory[catId] || []
+    const fall = scheduledByCategory[catId] || []
+    if (summer.length === 0) return fall
+    const items: string[] = []
+    for (const code of summer) items.push(`SU: ${code}`)
+    for (const code of fall) items.push(`FA: ${code}`)
+    return items
+  }
+
   // Process each requirement category
   for (const cat of degree.required.categories) {
     const completedInCat = studentData.completedCourses.filter((c: string) => cat.courses?.includes(c))
     const credits = specialCreditsByCategory[cat.id] || []
     const scheduledInCat = scheduledByCategory[cat.id] || []
+    const summerInCat = summerScheduledByCategory[cat.id] || []
     const specialCreditCount = credits.length
     const requiredCount = cat.selectOne ? 1 : ((cat as { count?: number }).count ?? 1)
-    
+
     // Capture overflow
     if (completedInCat.length > requiredCount) {
       requiredOverflow.push(...completedInCat.slice(requiredCount))
     }
 
     const totalCompleted = completedInCat.length + specialCreditCount
-    const totalWithScheduled = totalCompleted + scheduledInCat.length
+    const totalWithScheduled = totalCompleted + scheduledInCat.length + summerInCat.length
 
     let status = ''
     if (totalCompleted >= requiredCount) {
@@ -324,7 +351,7 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
     }
 
     // Handle capstone auto-scheduling
-    let displayScheduled = scheduledInCat
+    let displayScheduled = buildScheduledDisplay(cat.id)
     if (cat.id === 'capstone' && capstoneAutoScheduled) {
       displayScheduled = [`→ ${capstoneTarget}`]
     }
@@ -359,10 +386,11 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
       }
 
       const scheduledInCat = scheduledByCategory[cat.id] || []
+      const summerInCat = summerScheduledByCategory[cat.id] || []
       const credits = specialCreditsByCategory[cat.id] || []
       const specialCreditCount = credits.length
       const totalCompleted = Math.min(completedInCat.length + specialCreditCount, requiredCount)
-      const totalWithScheduled = totalCompleted + Math.min(scheduledInCat.length, requiredCount - totalCompleted)
+      const totalWithScheduled = totalCompleted + Math.min(scheduledInCat.length + summerInCat.length, requiredCount - totalCompleted)
 
       let status = ''
       if (totalCompleted >= requiredCount) {
@@ -373,7 +401,7 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
         status = `${totalCompleted}/${requiredCount}`
       }
 
-      drawRow(cat.name, status, completedInCat.slice(0, requiredCount), scheduledInCat, credits)
+      drawRow(cat.name, status, completedInCat.slice(0, requiredCount), buildScheduledDisplay(cat.id), credits)
     }
   }
 
@@ -403,6 +431,7 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
     generalCompleted = [...fallbackGeneral, ...requiredOverflow, ...electiveOverflow]
   }
   const generalScheduled = scheduledByCategory['generalElectives'] || []
+  const generalSummerScheduled = summerScheduledByCategory['generalElectives'] || []
   const generalCredits = specialCreditsByCategory['generalElectives'] || []
   const generalRequired = degree.generalElectives.count
   const totalGeneral = generalCompleted.length + generalCredits.length
@@ -410,13 +439,13 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
   let generalStatus = ''
   if (totalGeneral >= generalRequired) {
     generalStatus = '✓ Complete'
-  } else if (totalGeneral + generalScheduled.length >= generalRequired) {
+  } else if (totalGeneral + generalScheduled.length + generalSummerScheduled.length >= generalRequired) {
     generalStatus = 'Scheduled'
   } else {
     generalStatus = `${totalGeneral}/${generalRequired}`
   }
 
-  drawRow(degree.generalElectives.name, generalStatus, generalCompleted.slice(0, generalRequired), generalScheduled, generalCredits)
+  drawRow(degree.generalElectives.name, generalStatus, generalCompleted.slice(0, generalRequired), buildScheduledDisplay('generalElectives'), generalCredits)
 
   // Draw table borders
   doc.setDrawColor(180)
@@ -445,13 +474,17 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
       return true
     })
     const scheduledInCat = scheduledByCategory[cat.id] || []
+    const summerInCat = summerScheduledByCategory[cat.id] || []
     const credits = specialCreditsByCategory[cat.id] || []
     const specialCreditCount = credits.length
     const totalCompleted = completedInCat.length + specialCreditCount
-    const totalWithScheduled = totalCompleted + scheduledInCat.length
+    const totalWithScheduled = totalCompleted + scheduledInCat.length + summerInCat.length
 
     // Track scheduled course categories
     scheduledInCat.forEach((code: string) => {
+      scheduledCourseCategories[code] = cat.name
+    })
+    summerInCat.forEach((code: string) => {
       scheduledCourseCategories[code] = cat.name
     })
 
@@ -465,24 +498,29 @@ export function generatePdfBlob({ studentData, generalElectives, scheduledSelect
   }
 
   // General electives needed
-  if (totalGeneral + generalScheduled.length < generalRequired) {
+  if (totalGeneral + generalScheduled.length + generalSummerScheduled.length < generalRequired) {
     neededCategoriesForPlan.push({
       category: 'generalElectives',
       name: degree.generalElectives.name,
-      remaining: generalRequired - totalGeneral - generalScheduled.length
+      remaining: generalRequired - totalGeneral - generalScheduled.length - generalSummerScheduled.length
     })
   }
   generalScheduled.forEach((code: string) => {
     scheduledCourseCategories[code] = degree.generalElectives.name
   })
-  
+  generalSummerScheduled.forEach((code: string) => {
+    scheduledCourseCategories[code] = degree.generalElectives.name
+  })
+
   // Build and draw semester plan
+  const summerCoursesList = Object.values(summerScheduledByCategory).flat()
   const semesterPlan = buildSemesterPlan(
     studentData.scheduledCourses,
     scheduledCourseCategories,
     neededCategoriesForPlan,
     studentData.expectedGraduation,
-    studentData.includeSummer || false
+    studentData.includeSummer || false,
+    summerCoursesList
   )
   
   if (semesterPlan.length > 0) {

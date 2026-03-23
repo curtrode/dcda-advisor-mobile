@@ -17,11 +17,12 @@ interface ReviewActionsStepProps {
   studentData: StudentData
   generalElectives?: string[]
   scheduledSelections?: Record<string, string | string[] | null>
+  summerScheduledSelections?: Record<string, string | string[] | null>
   updateStudentData: (updates: Partial<StudentData>) => void
   onStartOver: () => void
 }
 
-export function ReviewActionsStep({ studentData, generalElectives, scheduledSelections, updateStudentData, onStartOver }: ReviewActionsStepProps) {
+export function ReviewActionsStep({ studentData, generalElectives, scheduledSelections, summerScheduledSelections, updateStudentData, onStartOver }: ReviewActionsStepProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFilename, setPreviewFilename] = useState<string>('')
   const [showExportOptions, setShowExportOptions] = useState(false)
@@ -46,7 +47,7 @@ export function ReviewActionsStep({ studentData, generalElectives, scheduledSele
 
   const handlePreview = useCallback(() => {
     revokePreviewUrl()
-    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
+    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections, summerScheduledSelections })
     setPreviewUrl(blobUrl)
     setPreviewFilename(filename)
   }, [studentData, generalElectives, revokePreviewUrl])
@@ -57,7 +58,7 @@ export function ReviewActionsStep({ studentData, generalElectives, scheduledSele
   }, [revokePreviewUrl])
 
   const handlePrint = () => {
-    const { blobUrl } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
+    const { blobUrl } = generatePdfBlob({ studentData, generalElectives, scheduledSelections, summerScheduledSelections })
     printPdf(blobUrl, () => URL.revokeObjectURL(blobUrl))
     trackExport('print')
   }
@@ -70,7 +71,7 @@ export function ReviewActionsStep({ studentData, generalElectives, scheduledSele
   }
 
   const handleSubmitToAdvisor = () => {
-    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections })
+    const { blobUrl, filename } = generatePdfBlob({ studentData, generalElectives, scheduledSelections, summerScheduledSelections })
     downloadPdf(blobUrl, filename)
     URL.revokeObjectURL(blobUrl)
     setSubmitFilename(filename)
