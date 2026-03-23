@@ -15,7 +15,7 @@ import {
   isValidTcuEmail,
 } from '@/components/wizard'
 import { InstallPrompt } from '@/components/InstallPrompt'
-import { getRequiredCategoryCourses, getSummerTerm, getNextSemesterTerm } from '@/services/courses'
+import { getRequiredCategoryCourses, getSummerTerm } from '@/services/courses'
 import { buildAdaContext } from '@/lib/buildAdaContext'
 import type { RequirementCategoryId } from '@/types'
 import requirementsData from '../data/requirements.json'
