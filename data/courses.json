@@ -467,5 +467,12 @@
     "category": "Honors Seminars & Capstone",
     "college": "ADRN",
     "description": "Prerequisites: Either MATH 10043 or INSC 20153. Also, one of the following: GEOG 30323, WRIT 20833, or COSC 10603. This course is designed as a capstone experience for students in the Digital Culture & Data Analytics (DCDA) program. Hence, the course is designed to give students the opportunity to develop a semester-long project that will allow them to practice, reflect upon, and publicly showcase their work as students in the DCDA program."
+  },
+  {
+    "code": "POSC 31453",
+    "title": "Data Science and Public Policy",
+    "category": "Data Analytics",
+    "college": "ADRN",
+    "description": "This course is an introduction to the politics and policies of data science and \"big data.\" Students will gain an understanding of how public policy is made, including the role of data in policymaking. Students will learn about the ethical, legal, and social implications of data science and big data, including issues such as privacy, informed consent, security, safety, bias, and workforce impacts."
   }
 ]
