@@ -56,6 +56,13 @@
     "description": "Prerequisites: ENGL/WRIT/CRWT 10203 or ENGL/WRIT/CRWT 20103 or ENGL/WRIT/CRWT 20133 or Digital Culture and Data Analytics major or minor. Explores the composition of creative work using digital technologies - collage, graphic narratives, multimedia poetry/fiction, and creative short animations. The course emphasizes concepts in creative writing, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating typography, images, and other modes. Students cannot receive credit for CRWT 55363 and CRWT 30363."
   },
   {
+    "code": "DCDA 30833",
+    "title": "Creative Coding",
+    "category": "Digital Culture",
+    "college": "ADRN",
+    "description": "Prerequisites (one of the following): GEOG 30323, CRWT 30363, WRIT 20833, DCDA 20833, or COSC 10603. Introduces creative coding as a method for artistic, literary, and critical expression within digital culture. Moving beyond functional software development, students explore code as an expressive medium capable of dramatizing complex states of thought and feeling. Through a series of labs (technical exercises) and projects (creative syntheses), students will build generative visual art, interactive poetry, sonified systems, and data-driven narratives."
+  },
+  {
     "code": "DCDA 30970",
     "title": "Special Topics in DCDA",
     "category": "Digital Culture",

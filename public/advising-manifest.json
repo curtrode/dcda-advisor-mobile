@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0",
   "department": "Digital Culture and Data Analytics",
-  "lastUpdated": "2026-03-27T13:45:11.775Z",
+  "lastUpdated": "2026-03-29T14:00:13.238Z",
   "wizardUrl": "https://dcda-advisor-mobile.web.app",
   "programs": [
     {
@@ -306,6 +306,14 @@
                 "hours": 3,
                 "level": "upper",
                 "description": "Prerequisites: ENGL/WRIT/CRWT 10203 or ENGL/WRIT/CRWT 20103 or ENGL/WRIT/CRWT 20133 or Digital Culture and Data Analytics major or minor. Explores the composition of creative work using digital technologies - collage, graphic narratives, multimedia poetry/fiction, and creative short animations. The course emphasizes concepts in creative writing, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating typography, images, and other modes. Students cannot receive credit for CRWT 55363 and CRWT 30363.",
+                "category": "Digital Culture"
+              },
+              {
+                "code": "DCDA 30833",
+                "title": "Creative Coding",
+                "hours": 3,
+                "level": "upper",
+                "description": "Prerequisites (one of the following): GEOG 30323, CRWT 30363, WRIT 20833, DCDA 20833, or COSC 10603. Introduces creative coding as a method for artistic, literary, and critical expression within digital culture. Moving beyond functional software development, students explore code as an expressive medium capable of dramatizing complex states of thought and feeling. Through a series of labs (technical exercises) and projects (creative syntheses), students will build generative visual art, interactive poetry, sonified systems, and data-driven narratives.",
                 "category": "Digital Culture"
               },
               {
@@ -763,6 +771,14 @@
                 "level": "lower",
                 "description": "This course is designed as an introduction to coding for students in the Humanities and/or the Digital Culture and Data Analytics (DCDA) Program. Hence, students will be introduced to the basics of a computer programming language (such as Python or R) as it pertains to the intellectual, cultural, and creative work central to the Humanities. Students may not receive credit for both WRIT 20833 and DCDA 20833.",
                 "category": "Data Analytics"
+              },
+              {
+                "code": "POSC 31453",
+                "title": "Data Science and Public Policy",
+                "hours": 3,
+                "level": "upper",
+                "description": "This course is an introduction to the politics and policies of data science and \"big data.\" Students will gain an understanding of how public policy is made, including the role of data in policymaking. Students will learn about the ethical, legal, and social implications of data science and big data, including issues such as privacy, informed consent, security, safety, bias, and workforce impacts.",
+                "category": "Data Analytics"
               }
             ],
             "note": "Select 1 course(s) from Data Analytics electives"
@@ -834,6 +850,14 @@
                 "hours": 3,
                 "level": "upper",
                 "description": "Prerequisites: ENGL/WRIT/CRWT 10203 or ENGL/WRIT/CRWT 20103 or ENGL/WRIT/CRWT 20133 or Digital Culture and Data Analytics major or minor. Explores the composition of creative work using digital technologies - collage, graphic narratives, multimedia poetry/fiction, and creative short animations. The course emphasizes concepts in creative writing, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating typography, images, and other modes. Students cannot receive credit for CRWT 55363 and CRWT 30363.",
+                "category": "Digital Culture"
+              },
+              {
+                "code": "DCDA 30833",
+                "title": "Creative Coding",
+                "hours": 3,
+                "level": "upper",
+                "description": "Prerequisites (one of the following): GEOG 30323, CRWT 30363, WRIT 20833, DCDA 20833, or COSC 10603. Introduces creative coding as a method for artistic, literary, and critical expression within digital culture. Moving beyond functional software development, students explore code as an expressive medium capable of dramatizing complex states of thought and feeling. Through a series of labs (technical exercises) and projects (creative syntheses), students will build generative visual art, interactive poetry, sonified systems, and data-driven narratives.",
                 "category": "Digital Culture"
               },
               {
@@ -1307,6 +1331,14 @@
                 "level": "upper",
                 "description": "Prerequisites: Either MATH 10043 or INSC 20153. Also, one of the following: GEOG 30323, WRIT 20833, or COSC 10603. This course is designed as a capstone experience for students in the Digital Culture & Data Analytics (DCDA) program. Hence, the course is designed to give students the opportunity to develop a semester-long project that will allow them to practice, reflect upon, and publicly showcase their work as students in the DCDA program.",
                 "category": "Honors Seminars & Capstone"
+              },
+              {
+                "code": "POSC 31453",
+                "title": "Data Science and Public Policy",
+                "hours": 3,
+                "level": "upper",
+                "description": "This course is an introduction to the politics and policies of data science and \"big data.\" Students will gain an understanding of how public policy is made, including the role of data in policymaking. Students will learn about the ethical, legal, and social implications of data science and big data, including issues such as privacy, informed consent, security, safety, bias, and workforce impacts.",
+                "category": "Data Analytics"
               }
             ],
             "note": "Any DCDA-approved course from any category"
@@ -2162,6 +2194,14 @@
                 "category": "Digital Culture"
               },
               {
+                "code": "DCDA 30833",
+                "title": "Creative Coding",
+                "hours": 3,
+                "level": "upper",
+                "description": "Prerequisites (one of the following): GEOG 30323, CRWT 30363, WRIT 20833, DCDA 20833, or COSC 10603. Introduces creative coding as a method for artistic, literary, and critical expression within digital culture. Moving beyond functional software development, students explore code as an expressive medium capable of dramatizing complex states of thought and feeling. Through a series of labs (technical exercises) and projects (creative syntheses), students will build generative visual art, interactive poetry, sonified systems, and data-driven narratives.",
+                "category": "Digital Culture"
+              },
+              {
                 "code": "DCDA 30970",
                 "title": "Special Topics in DCDA",
                 "hours": 3,
@@ -2632,6 +2672,14 @@
                 "level": "upper",
                 "description": "Prerequisites: Either MATH 10043 or INSC 20153. Also, one of the following: GEOG 30323, WRIT 20833, or COSC 10603. This course is designed as a capstone experience for students in the Digital Culture & Data Analytics (DCDA) program. Hence, the course is designed to give students the opportunity to develop a semester-long project that will allow them to practice, reflect upon, and publicly showcase their work as students in the DCDA program.",
                 "category": "Honors Seminars & Capstone"
+              },
+              {
+                "code": "POSC 31453",
+                "title": "Data Science and Public Policy",
+                "hours": 3,
+                "level": "upper",
+                "description": "This course is an introduction to the politics and policies of data science and \"big data.\" Students will gain an understanding of how public policy is made, including the role of data in policymaking. Students will learn about the ethical, legal, and social implications of data science and big data, including issues such as privacy, informed consent, security, safety, bias, and workforce impacts.",
+                "category": "Data Analytics"
               }
             ],
             "note": "Any DCDA-approved course from any category"
@@ -3281,6 +3329,13 @@
       "description": "Prerequisites: ENGL/WRIT/CRWT 10203 or ENGL/WRIT/CRWT 20103 or ENGL/WRIT/CRWT 20133 or Digital Culture and Data Analytics major or minor. Explores the composition of creative work using digital technologies - collage, graphic narratives, multimedia poetry/fiction, and creative short animations. The course emphasizes concepts in creative writing, multimedia, and authorship in digital environments. Students design and compose a variety of multimedia products incorporating typography, images, and other modes. Students cannot receive credit for CRWT 55363 and CRWT 30363."
     },
     {
+      "code": "DCDA 30833",
+      "title": "Creative Coding",
+      "hours": 3,
+      "level": "upper",
+      "description": "Prerequisites (one of the following): GEOG 30323, CRWT 30363, WRIT 20833, DCDA 20833, or COSC 10603. Introduces creative coding as a method for artistic, literary, and critical expression within digital culture. Moving beyond functional software development, students explore code as an expressive medium capable of dramatizing complex states of thought and feeling. Through a series of labs (technical exercises) and projects (creative syntheses), students will build generative visual art, interactive poetry, sonified systems, and data-driven narratives."
+    },
+    {
       "code": "DCDA 30970",
       "title": "Special Topics in DCDA",
       "hours": 3,
@@ -3692,6 +3747,13 @@
       "hours": 3,
       "level": "upper",
       "description": "Prerequisites: Either MATH 10043 or INSC 20153. Also, one of the following: GEOG 30323, WRIT 20833, or COSC 10603. This course is designed as a capstone experience for students in the Digital Culture & Data Analytics (DCDA) program. Hence, the course is designed to give students the opportunity to develop a semester-long project that will allow them to practice, reflect upon, and publicly showcase their work as students in the DCDA program."
+    },
+    {
+      "code": "POSC 31453",
+      "title": "Data Science and Public Policy",
+      "hours": 3,
+      "level": "upper",
+      "description": "This course is an introduction to the politics and policies of data science and \"big data.\" Students will gain an understanding of how public policy is made, including the role of data in policymaking. Students will learn about the ethical, legal, and social implications of data science and big data, including issues such as privacy, informed consent, security, safety, bias, and workforce impacts."
     }
   ],
   "advisingNotes": [
