@@ -11,7 +11,7 @@ import {
 import { Info, Search, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RequirementCategoryId, Course } from '@/types'
-import { getCoursesForCategory, isMutuallyExcluded } from '@/services/courses'
+import { getCoursesForCategory, getCoursesByCategory, isMutuallyExcluded } from '@/services/courses'
 
 // Info button component — 36px touch target minimum
 function CourseInfoButton({ course, onClick }: { course: Course; onClick: () => void }) {
@@ -100,8 +100,10 @@ export function CourseStep({
 
   if (multiSelect) {
     // Group courses by category
-    const digitalCultureCourses = searchedCourses.filter((c) => c.category === 'Digital Culture')
-    const dataAnalyticsCourses = searchedCourses.filter((c) => c.category === 'Data Analytics')
+    const dcCodes = new Set(getCoursesByCategory('Digital Culture').map((c) => c.code))
+    const daCodes = new Set(getCoursesByCategory('Data Analytics').map((c) => c.code))
+    const digitalCultureCourses = searchedCourses.filter((c) => dcCodes.has(c.code))
+    const dataAnalyticsCourses = searchedCourses.filter((c) => daCodes.has(c.code))
     const mmAuthoringCourses = searchedCourses.filter((c) => c.category === 'Multimedia Authoring')
     const honorsCourses = searchedCourses.filter((c) => c.category === 'Honors Seminars & Capstone')
 
