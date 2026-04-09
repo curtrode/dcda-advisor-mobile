@@ -146,20 +146,21 @@ export async function recordAnonymousSubmission(
       termId
     )
 
-    const scheduledIncrements: Record<string, ReturnType<typeof increment>> = {}
+    // Build nested maps — setDoc() treats dot-notation keys literally,
+    // so we pass actual nested objects for useAnalytics.ts to read correctly.
+    const scheduledMap: Record<string, ReturnType<typeof increment>> = {}
     for (const code of studentData.scheduledCourses) {
-      scheduledIncrements[`scheduled.${code}`] = increment(1)
+      scheduledMap[code] = increment(1)
     }
-    const completedIncrements: Record<string, ReturnType<typeof increment>> = {}
+    const completedMap: Record<string, ReturnType<typeof increment>> = {}
     for (const code of studentData.completedCourses) {
-      completedIncrements[`completed.${code}`] = increment(1)
+      completedMap[code] = increment(1)
     }
-
-    if (Object.keys(scheduledIncrements).length > 0) {
-      await setDoc(demandRef, scheduledIncrements, { merge: true })
-    }
-    if (Object.keys(completedIncrements).length > 0) {
-      await setDoc(demandRef, completedIncrements, { merge: true })
+    const demandPayload: Record<string, unknown> = {}
+    if (Object.keys(scheduledMap).length > 0) demandPayload.scheduled = scheduledMap
+    if (Object.keys(completedMap).length > 0) demandPayload.completed = completedMap
+    if (Object.keys(demandPayload).length > 0) {
+      await setDoc(demandRef, demandPayload, { merge: true })
     }
   } catch {
     // Silent failure — never block the student experience
