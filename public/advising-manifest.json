@@ -1,7 +1,11 @@
 {
   "manifestVersion": "1.0",
   "department": "Digital Culture and Data Analytics",
+<<<<<<< HEAD
   "lastUpdated": "2026-04-10T08:26:49.459Z",
+=======
+  "lastUpdated": "2026-04-09T15:39:56.856Z",
+>>>>>>> 0f7c9ad41dfce1456cbc9249333f4ce4a55d845e
   "wizardUrl": "https://dcda-advisor-mobile.web.app",
   "programs": [
     {
