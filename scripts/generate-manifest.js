@@ -9,7 +9,7 @@
  * Part of the AddRan Advising Ecosystem integration (Phase 2)
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import Ajv from 'ajv';
@@ -104,6 +104,19 @@ let upcomingOfferings;
 try {
   upcomingOfferings = await fetchUpcomingOfferings();
 } catch (err) {
+  // CI fallback: GitHub Actions (and most CI providers) set CI=true and don't
+  // have Application Default Credentials. In that case, skip regeneration and
+  // leave the committed manifest in place — the build contract is that the
+  // wizard maintainer runs `npm run generate-manifest` locally and commits
+  // public/advising-manifest.json before pushing content changes.
+  if (process.env.CI === 'true' && existsSync(OUTPUT_PATH)) {
+    console.warn('\nWARNING: Firestore unreachable — using committed manifest as-is.');
+    console.warn(`  Reason: ${err.message}`);
+    console.warn(`  Manifest: ${OUTPUT_PATH}`);
+    console.warn('  Regenerate and commit locally before pushing new offerings content.\n');
+    process.exit(0);
+  }
+
   console.error('\nFailed to read dcda_config from Firestore:');
   console.error(`  ${err.message}`);
   console.error('\nThis script requires Application Default Credentials.');
