@@ -77,7 +77,11 @@ export function AnalyticsDashboard() {
   // Sort course demand by scheduled count descending
   const demandEntries = summary.courseDemand
     ? Object.entries(summary.courseDemand.scheduled)
-        .sort(([, a], [, b]) => b - a)
+        .sort(([codeA, a], [codeB, b]) => {
+          const completedA = summary.courseDemand?.completed[codeA] ?? 0
+          const completedB = summary.courseDemand?.completed[codeB] ?? 0
+          return completedB - completedA || b - a
+        })
     : []
 
   return (
@@ -185,18 +189,18 @@ export function AnalyticsDashboard() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Course</th>
-                  <th className="text-right px-4 py-2 font-medium">Scheduled</th>
                   <th className="text-right px-4 py-2 font-medium">Completed</th>
+                  <th className="text-right px-4 py-2 font-medium">Scheduled</th>
                 </tr>
               </thead>
               <tbody>
                 {demandEntries.map(([code, scheduled]) => (
                   <tr key={code} className="border-t">
                     <td className="px-4 py-2 font-mono">{code}</td>
-                    <td className="text-right px-4 py-2">{scheduled}</td>
                     <td className="text-right px-4 py-2">
                       {summary.courseDemand?.completed[code] ?? 0}
                     </td>
+                    <td className="text-right px-4 py-2">{scheduled}</td>
                   </tr>
                 ))}
               </tbody>
