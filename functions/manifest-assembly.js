@@ -18,7 +18,7 @@ const validateSchema = ajv.compile(schema);
 const SEASON_ORDER = { sp: 0, su: 1, fa: 2 };
 const SEASON_LABEL = { sp: 'Spring', su: 'Summer', fa: 'Fall' };
 
-function termStartDate(season, yy) {
+export function termStartDate(season, yy) {
   const year = 2000 + yy;
   if (season === 'sp') return new Date(year, 0, 15);
   if (season === 'su') return new Date(year, 4, 20);
@@ -26,7 +26,7 @@ function termStartDate(season, yy) {
   return null;
 }
 
-function parseHours(code) {
+export function parseHours(code) {
   const match = code.match(/\d+$/);
   if (match) {
     const lastDigit = parseInt(match[0].slice(-1), 10);
@@ -35,7 +35,7 @@ function parseHours(code) {
   return 3;
 }
 
-function parseLevel(code) {
+export function parseLevel(code) {
   const match = code.match(/(\d{5})/);
   if (match) {
     const num = parseInt(match[1], 10);
@@ -44,7 +44,7 @@ function parseLevel(code) {
   return undefined;
 }
 
-function buildCourseFactory(courses) {
+export function buildCourseFactory(courses) {
   const lookup = new Map(courses.map((c) => [c.code, c]));
   return function buildCourse(code) {
     const catalogEntry = lookup.get(code);
@@ -61,7 +61,7 @@ function buildCourseFactory(courses) {
   };
 }
 
-function buildRequirementCategories(reqData, courses, buildCourse) {
+export function buildRequirementCategories(reqData, courses, buildCourse) {
   const categories = [];
 
   if (reqData.required?.categories) {
@@ -106,7 +106,7 @@ function buildRequirementCategories(reqData, courses, buildCourse) {
   return categories;
 }
 
-function buildPrerequisites(reqData) {
+export function buildPrerequisites(reqData) {
   const prereqs = {};
   if (reqData.required?.categories) {
     for (const cat of reqData.required.categories) {
@@ -125,7 +125,7 @@ function buildPrerequisites(reqData) {
   return prereqs;
 }
 
-async function fetchUpcomingOfferings(db) {
+export async function fetchUpcomingOfferings(db) {
   const snap = await db.collection('dcda_config').get();
   const now = new Date();
   const terms = [];
